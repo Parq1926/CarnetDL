@@ -9,7 +9,7 @@ namespace SRV14_CarnetQR
         public static void MapCarnetQREndpoints(this IEndpointRouteBuilder routes)
         {
             var group = routes
-                .MapGroup("/api/usuario/qr")
+                .MapGroup("/usuario/qr")
                 .WithTags("CarnetQR")
                 .RequireCors("ReactDev");
 

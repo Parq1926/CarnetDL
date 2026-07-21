@@ -10,7 +10,7 @@ namespace SRV15_Parametro
         public static void MapParametroEndpoints(this IEndpointRouteBuilder routes)
         {
             var group = routes
-                .MapGroup("/api/parametro")
+                .MapGroup("/parametro")
                 .WithTags("Parametro")
                 .RequireCors("ReactDev");
 
@@ -77,9 +77,15 @@ namespace SRV15_Parametro
                 // ------------------------------------------------------------------
 
                 var (ok, error) = await service.CreateAsync(request);
-                return ok
-                    ? Results.Created($"/api/parametro/{request.Id}", new { message = "Parámetro creado correctamente" })
-                    : Results.BadRequest(new { message = error });
+
+                if (!ok && error.Contains("Ya existe"))
+                    return Results.Conflict(new { message = error });
+
+                if (!ok)
+                    return Results.BadRequest(new { message = error });
+
+                var creado = await service.GetByIdAsync(request.Id);
+                return Results.Created($"/api/parametro/{request.Id}", creado);
             })
             .WithName("CreateParametro");
 
@@ -107,9 +113,11 @@ namespace SRV15_Parametro
                 if (!ok && error.Contains("No se encontró"))
                     return Results.NotFound(new { message = error });
 
-                return ok
-                    ? Results.Ok(new { message = "Parámetro actualizado correctamente" })
-                    : Results.BadRequest(new { message = error });
+                if (!ok)
+                    return Results.BadRequest(new { message = error });
+
+                var actualizado = await service.GetByIdAsync(id);
+                return Results.Ok(actualizado);
             })
             .WithName("UpdateParametro");
 
@@ -132,9 +140,11 @@ namespace SRV15_Parametro
                 if (string.IsNullOrWhiteSpace(id))
                     return Results.BadRequest(new { message = "El identificador es requerido" });
 
+                var eliminado = await service.GetByIdAsync(id);
+
                 var (ok, error) = await service.DeleteAsync(id);
                 return ok
-                    ? Results.Ok(new { message = "Parámetro eliminado correctamente" })
+                    ? Results.Ok(eliminado)
                     : Results.NotFound(new { message = error });
             })
             .WithName("DeleteParametro");

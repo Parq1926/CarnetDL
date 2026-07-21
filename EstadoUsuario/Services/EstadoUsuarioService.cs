@@ -1,3 +1,4 @@
+using SRV12_EstadoUsuario.Entities;
 using SRV12_EstadoUsuario.Repository;
 
 namespace SRV12_EstadoUsuario.Services
@@ -7,11 +8,18 @@ namespace SRV12_EstadoUsuario.Services
         private readonly EstadoUsuarioRepository _repository;
         public EstadoUsuarioService(EstadoUsuarioRepository repository) { _repository = repository; }
 
-        public async Task<int> CambiarEstadoAsync(string identificacion, string codigoEstado)
+        public async Task<(int, UsuarioEstado?)> CambiarEstadoAsync(int usuarioId, string codigoEstado)
         {
-            var estado = await _repository.GetEstadoByCodigoAsync(codigoEstado);
-            if (estado is null) return -1;
-            return await _repository.UpsertEstadoUsuarioAsync(identificacion, estado.Id);
+            if (!await _repository.ExisteUsuarioAsync(usuarioId))
+                return (-1, null);
+
+            var estado = await _repository.GetEstadoAsync(codigoEstado);
+            if (estado is null) return (-2, null);
+
+            var filas = await _repository.CambiarEstadoAsync(usuarioId, estado.Id);
+            if (filas <= 0) return (0, null);
+
+            return (1, await _repository.GetUsuarioEstadoAsync(usuarioId));
         }
     }
 }

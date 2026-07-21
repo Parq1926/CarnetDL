@@ -21,12 +21,19 @@ namespace SRV13_Fotografia.Auth
             if (string.IsNullOrWhiteSpace(token))
                 return false;
 
-            var baseUrl = _configuration["Services:LoginSRV1"] ?? "http://localhost:5001";
+            var baseUrl = (_configuration["Services:LoginSRV1"] ?? "http://localhost:5019").TrimEnd('/');
 
             try
             {
-                var response = await _httpClient.GetAsync(
-                    $"{baseUrl}/api/auth/validate?token={Uri.EscapeDataString(token)}");
+                // El endpoint GET /api/Auth/validate del SRV1 lee el token del header
+                // Authorization: Bearer <token>
+                using var request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    $"{baseUrl}/api/Auth/validate?token={Uri.EscapeDataString(token)}");
+
+                request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {token}");
+
+                var response = await _httpClient.SendAsync(request);
                 return response.IsSuccessStatusCode;
             }
             catch

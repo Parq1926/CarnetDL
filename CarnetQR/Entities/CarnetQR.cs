@@ -1,5 +1,6 @@
 namespace SRV14_CarnetQR.Entities
 {
+    // Contenido json que se codifica dentro del codigo QR (HU SRV14)
     public class CarnetQRData
     {
         public string NombreCompleto { get; set; } = null!;
@@ -7,22 +8,15 @@ namespace SRV14_CarnetQR.Entities
         public string TipoUsuario { get; set; } = null!;
         public List<string> CarrerasOAreas { get; set; } = new();
         public string Institucion { get; set; } = null!;
-        public DateTime FechaVencimiento { get; set; }
+        public DateOnly FechaVencimiento { get; set; }
     }
 
-    public class CarnetQR
+    // Datos del usuario leidos de tiusr22pl_userDB
+    public class UsuarioCarnet
     {
         public int Id { get; set; }
-        public string UsuarioIdentificacion { get; set; } = null!;
-        public string QrBase64 { get; set; } = null!;
-        public DateTime FechaGeneracion { get; set; }
-    }
-
-    public class CarnetQRResponse
-    {
-        public string UsuarioIdentificacion { get; set; } = null!;
-        public string QrBase64 { get; set; } = null!;
-        public DateTime FechaGeneracion { get; set; }
-        public CarnetQRData Datos { get; set; } = null!;
+        public string NombreCompleto { get; set; } = null!;
+        public string NumeroIdentificacion { get; set; } = null!;
+        public string TipoUsuario { get; set; } = null!;
     }
 }

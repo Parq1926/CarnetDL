@@ -3,8 +3,6 @@ using SRV14_CarnetQR.Entities;
 using SRV14_CarnetQR.Repository;
 using System.Text.Json;
 
-// Nota: CarnetQRData y CarnetQR se usan internamente para armar el contenido del QR.
-
 namespace SRV14_CarnetQR.Services
 {
     public class CarnetQRService : ICarnetQRService
@@ -18,9 +16,28 @@ namespace SRV14_CarnetQR.Services
 
         public async Task<string?> GenerarQRAsync(string identificacion)
         {
-            var datosCarnet = ObtenerDatosSimulados(identificacion);
-            if (datosCarnet is null)
+            var usuario = await _repository.ObtenerUsuarioAsync(identificacion);
+            if (usuario is null)
                 return null;
+
+            // Estudiante -> carreras asociadas | Funcionario -> areas asociadas
+            var esEstudiante = usuario.TipoUsuario.Contains("Estudiante", StringComparison.OrdinalIgnoreCase);
+
+            var carrerasOAreas = esEstudiante
+                ? await _repository.ObtenerCarrerasAsync(usuario.Id)
+                : await _repository.ObtenerAreasAsync(usuario.Id);
+
+            var instituciones = await _repository.ObtenerInstitucionesAsync(usuario.Id);
+
+            var datosCarnet = new CarnetQRData
+            {
+                NombreCompleto   = usuario.NombreCompleto,
+                Identificacion   = usuario.NumeroIdentificacion,
+                TipoUsuario      = usuario.TipoUsuario,
+                CarrerasOAreas   = carrerasOAreas,
+                Institucion      = string.Join(", ", instituciones),
+                FechaVencimiento = new DateOnly(DateTime.Today.Year, 12, 31)
+            };
 
             var jsonContenido = JsonSerializer.Serialize(datosCarnet, new JsonSerializerOptions
             {
@@ -28,11 +45,7 @@ namespace SRV14_CarnetQR.Services
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
 
-            var qrBase64 = GenerarQRBase64(jsonContenido);
-
-            await _repository.UpsertCarnetQRAsync(identificacion, qrBase64);
-
-            return qrBase64;
+            return GenerarQRBase64(jsonContenido);
         }
 
         private static string GenerarQRBase64(string contenido)
@@ -42,51 +55,6 @@ namespace SRV14_CarnetQR.Services
             using var qrCode = new PngByteQRCode(qrData);
             var pngBytes = qrCode.GetGraphic(10);
             return Convert.ToBase64String(pngBytes);
-        }
-
-        private static CarnetQRData? ObtenerDatosSimulados(string identificacion)
-        {
-            var usuarios = new Dictionary<string, CarnetQRData>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["1-0234-5678"] = new CarnetQRData
-                {
-                    NombreCompleto   = "Ana María Solís Herrera",
-                    Identificacion   = "1-0234-5678",
-                    TipoUsuario      = "Estudiante",
-                    CarrerasOAreas   = new List<string> { "Ingeniería en Tecnologías de Información" },
-                    Institucion      = "Colegio Universitario de Cartago",
-                    FechaVencimiento = new DateTime(2026, 12, 31)
-                },
-                ["2-0456-7890"] = new CarnetQRData
-                {
-                    NombreCompleto   = "Carlos Eduardo Mora Jiménez",
-                    Identificacion   = "2-0456-7890",
-                    TipoUsuario      = "Funcionario",
-                    CarrerasOAreas   = new List<string> { "Departamento de Registro", "Departamento de TI" },
-                    Institucion      = "Colegio Universitario de Cartago",
-                    FechaVencimiento = new DateTime(2026, 12, 31)
-                },
-                ["3-0678-9012"] = new CarnetQRData
-                {
-                    NombreCompleto   = "Laura Beatriz Vargas Campos",
-                    Identificacion   = "3-0678-9012",
-                    TipoUsuario      = "Estudiante",
-                    CarrerasOAreas   = new List<string> { "Administración de Empresas", "Contabilidad" },
-                    Institucion      = "Colegio Universitario de Cartago",
-                    FechaVencimiento = new DateTime(2026, 12, 31)
-                },
-                ["4-0891-2345"] = new CarnetQRData
-                {
-                    NombreCompleto   = "Roberto Alvarado Navarro",
-                    Identificacion   = "4-0891-2345",
-                    TipoUsuario      = "Administrador",
-                    CarrerasOAreas   = new List<string> { "Dirección General" },
-                    Institucion      = "Colegio Universitario de Cartago",
-                    FechaVencimiento = new DateTime(2026, 12, 31)
-                }
-            };
-
-            return usuarios.TryGetValue(identificacion, out var datos) ? datos : null;
         }
     }
 }

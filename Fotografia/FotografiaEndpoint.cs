@@ -10,7 +10,7 @@ namespace SRV13_Fotografia
         public static void MapFotografiaEndpoints(this IEndpointRouteBuilder routes)
         {
             var group = routes
-                .MapGroup("/api/usuario/fotografia")
+                .MapGroup("/usuario/fotografia")
                 .WithTags("Fotografia")
                 .RequireCors("ReactDev");
 
@@ -21,79 +21,77 @@ namespace SRV13_Fotografia
                 [FromBody] ActualizarFotografiaRequest request) =>
             {
                 // --- AUTENTICACIÓN: validación de token contra el método validate del SRV1 ---
-                // El token JWT se obtiene del header Authorization: Bearer <token>
-                // Se valida contra el endpoint GET /api/auth/validate?token=... del SRV1.
-                // Si el token es inválido o está vencido, SRV1 responde 401 y se rechaza la operación.
                 var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 var tokenValidator = context.RequestServices.GetRequiredService<ITokenValidator>();
                 if (!await tokenValidator.ValidateAsync(token))
                     return Results.Unauthorized();
                 // ------------------------------------------------------------------
 
-                if (string.IsNullOrWhiteSpace(request.UsuarioIdentificacion) ||
+                if (request is null || !request.UsuarioId.HasValue || request.UsuarioId <= 0 ||
                     string.IsNullOrWhiteSpace(request.FotografiaBase64))
-                    return Results.BadRequest(new { message = "La identificación y la fotografía son requeridas" });
+                    return Results.BadRequest(new { message = "El identificador del usuario y la fotografia son requeridos" });
 
-                var result = await service.ActualizarFotografiaAsync(
-                    request.UsuarioIdentificacion, request.FotografiaBase64);
+                var (result, mensaje, fotografia) = await service.ActualizarFotografiaAsync(
+                    request.UsuarioId.Value, request.FotografiaBase64);
 
                 if (result == -1)
-                    return Results.NotFound(new { message = $"El usuario '{request.UsuarioIdentificacion}' no tiene fotografía registrada. Use el endpoint de carga inicial." });
+                    return Results.NotFound(new { message = $"El usuario con identificador {request.UsuarioId} no existe" });
+                if (result == -2)
+                    return Results.BadRequest(new { message = mensaje });
                 if (result <= 0)
-                    return Results.Problem("No se pudo actualizar la fotografía");
+                    return Results.Problem("No se pudo actualizar la fotografia");
 
-                return Results.Ok(new { message = "Fotografía actualizada correctamente" });
+                return Results.Ok(fotografia);
             })
             .WithName("ActualizarFotografia");
 
-            // DELETE /{identificacion} - Eliminar fotografía del usuario
-            group.MapDelete("/{identificacion}", async (
+            // DELETE /{usuarioId} - Eliminar fotografía del usuario
+            group.MapDelete("/{usuarioId:int}", async (
                 HttpContext context,
                 [FromServices] IFotografiaService service,
-                string identificacion) =>
+                int usuarioId) =>
             {
                 // --- AUTENTICACIÓN: validación de token contra el método validate del SRV1 ---
-                // El token JWT se obtiene del header Authorization: Bearer <token>
-                // Se valida contra el endpoint GET /api/auth/validate?token=... del SRV1.
-                // Si el token es inválido o está vencido, SRV1 responde 401 y se rechaza la operación.
                 var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 var tokenValidator = context.RequestServices.GetRequiredService<ITokenValidator>();
                 if (!await tokenValidator.ValidateAsync(token))
                     return Results.Unauthorized();
                 // ------------------------------------------------------------------
 
-                if (string.IsNullOrWhiteSpace(identificacion))
-                    return Results.BadRequest(new { message = "La identificación es requerida" });
+                if (usuarioId <= 0)
+                    return Results.BadRequest(new { message = "El identificador del usuario es requerido" });
 
-                var result = await service.EliminarFotografiaAsync(identificacion);
+                var (result, fotografia) = await service.EliminarFotografiaAsync(usuarioId);
 
+                if (result == -1)
+                    return Results.NotFound(new { message = $"El usuario con identificador {usuarioId} no existe" });
                 if (result <= 0)
-                    return Results.NotFound(new { message = $"No se encontró fotografía para el usuario '{identificacion}'" });
+                    return Results.NotFound(new { message = $"El usuario con identificador {usuarioId} no tiene fotografia registrada" });
 
-                return Results.Ok(new { message = "Fotografía eliminada correctamente" });
+                return Results.Ok(fotografia);
             })
             .WithName("EliminarFotografia");
 
-            // GET /{identificacion} - Obtener fotografía del usuario en Base64
-            group.MapGet("/{identificacion}", async (
+            // GET /{usuarioId} - Obtener fotografía del usuario en Base 64
+            group.MapGet("/{usuarioId:int}", async (
                 HttpContext context,
                 [FromServices] IFotografiaService service,
-                string identificacion) =>
+                int usuarioId) =>
             {
                 // --- AUTENTICACIÓN: validación de token contra el método validate del SRV1 ---
-                // El token JWT se obtiene del header Authorization: Bearer <token>
-                // Se valida contra el endpoint GET /api/auth/validate?token=... del SRV1.
-                // Si el token es inválido o está vencido, SRV1 responde 401 y se rechaza la operación.
                 var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 var tokenValidator = context.RequestServices.GetRequiredService<ITokenValidator>();
                 if (!await tokenValidator.ValidateAsync(token))
                     return Results.Unauthorized();
                 // ------------------------------------------------------------------
 
-                var foto = await service.ObtenerFotografiaAsync(identificacion);
+                if (usuarioId <= 0)
+                    return Results.BadRequest(new { message = "El identificador del usuario es requerido" });
+
+                var foto = await service.ObtenerFotografiaAsync(usuarioId);
 
                 return foto is null
-                    ? Results.NotFound(new { message = $"No se encontró fotografía para el usuario '{identificacion}'" })
+                    ? Results.NotFound(new { message = $"No se encontro fotografia para el usuario con identificador {usuarioId}" })
                     : Results.Ok(foto);
             })
             .WithName("ObtenerFotografia");

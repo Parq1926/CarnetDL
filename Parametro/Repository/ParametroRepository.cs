@@ -12,14 +12,14 @@ namespace SRV15_Parametro.Repository
         {
             using var conn = _db.CreateConnection();
             return await conn.QueryAsync<Parametro>(
-                "SELECT ID AS Id, VALOR AS Valor FROM PARAMETRO");
+                "SELECT ID AS Id, VALOR AS Valor FROM dbo.PARAMETRO");
         }
 
         public async Task<Parametro?> GetByIdAsync(string id)
         {
             using var conn = _db.CreateConnection();
             return await conn.QueryFirstOrDefaultAsync<Parametro>(
-                "SELECT ID AS Id, VALOR AS Valor FROM PARAMETRO WHERE ID = @id",
+                "SELECT ID AS Id, VALOR AS Valor FROM dbo.PARAMETRO WHERE ID = @id",
                 new { id });
         }
 
@@ -27,7 +27,7 @@ namespace SRV15_Parametro.Repository
         {
             using var conn = _db.CreateConnection();
             return await conn.ExecuteAsync(
-                "INSERT INTO PARAMETRO (ID, VALOR) VALUES (@Id, @Valor)",
+                "INSERT INTO dbo.PARAMETRO (ID, VALOR) VALUES (@Id, @Valor)",
                 parametro);
         }
 
@@ -35,7 +35,7 @@ namespace SRV15_Parametro.Repository
         {
             using var conn = _db.CreateConnection();
             return await conn.ExecuteAsync(
-                "UPDATE PARAMETRO SET VALOR = @Valor WHERE ID = @Id",
+                "UPDATE dbo.PARAMETRO SET VALOR = @Valor WHERE ID = @Id",
                 parametro);
         }
 
@@ -43,7 +43,7 @@ namespace SRV15_Parametro.Repository
         {
             using var conn = _db.CreateConnection();
             return await conn.ExecuteAsync(
-                "DELETE FROM PARAMETRO WHERE ID = @id",
+                "DELETE FROM dbo.PARAMETRO WHERE ID = @id",
                 new { id });
         }
     }

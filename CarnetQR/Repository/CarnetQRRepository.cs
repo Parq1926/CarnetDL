@@ -8,38 +8,47 @@ namespace SRV14_CarnetQR.Repository
         private readonly IDbConnectionFactory _db;
         public CarnetQRRepository(IDbConnectionFactory db) { _db = db; }
 
-        public async Task<int> UpsertCarnetQRAsync(string identificacion, string qrBase64)
+        public async Task<UsuarioCarnet?> ObtenerUsuarioAsync(string identificacion)
         {
             using var conn = _db.CreateConnection();
-
-            var exists = await conn.QueryFirstOrDefaultAsync<int?>(
-                "SELECT ID FROM CARNETQR WHERE USUARIO_IDENTIFICACION = @identificacion",
-                new { identificacion });
-
-            if (exists.HasValue)
-                return await conn.ExecuteAsync(
-                    @"UPDATE CARNETQR 
-                      SET QR_BASE64 = @qrBase64, FECHA_GENERACION = GETDATE()
-                      WHERE USUARIO_IDENTIFICACION = @identificacion",
-                    new { qrBase64, identificacion });
-
-            return await conn.ExecuteAsync(
-                @"INSERT INTO CARNETQR (USUARIO_IDENTIFICACION, QR_BASE64)
-                  VALUES (@identificacion, @qrBase64)",
-                new { identificacion, qrBase64 });
+            return await conn.QueryFirstOrDefaultAsync<UsuarioCarnet>(
+                @"SELECT u.Id                   AS Id,
+                         u.NombreCompleto       AS NombreCompleto,
+                         u.NumeroIdentificacion AS NumeroIdentificacion,
+                         tu.Nombre              AS TipoUsuario
+                  FROM dbo.Usuario u
+                       INNER JOIN dbo.TipoUsuario tu ON tu.Id = u.TipoUsuarioId
+                  WHERE u.NumeroIdentificacion = @identificacion",
+                new { identificacion = identificacion.Trim() });
         }
 
-        public async Task<CarnetQR?> GetByIdentificacionAsync(string identificacion)
+        // Carreras asociadas (estudiantes)
+        public async Task<List<string>> ObtenerCarrerasAsync(int usuarioId)
         {
             using var conn = _db.CreateConnection();
-            return await conn.QueryFirstOrDefaultAsync<CarnetQR>(
-                @"SELECT ID AS Id,
-                         USUARIO_IDENTIFICACION AS UsuarioIdentificacion,
-                         QR_BASE64             AS QrBase64,
-                         FECHA_GENERACION      AS FechaGeneracion
-                  FROM CARNETQR
-                  WHERE USUARIO_IDENTIFICACION = @identificacion",
-                new { identificacion });
+            var datos = await conn.QueryAsync<string>(
+                "SELECT CarreraId FROM dbo.UsuarioCarrera WHERE UsuarioId = @usuarioId ORDER BY CarreraId",
+                new { usuarioId });
+            return datos.ToList();
+        }
+
+        // Areas asociadas (funcionarios)
+        public async Task<List<string>> ObtenerAreasAsync(int usuarioId)
+        {
+            using var conn = _db.CreateConnection();
+            var datos = await conn.QueryAsync<string>(
+                "SELECT AreaId FROM dbo.UsuarioArea WHERE UsuarioId = @usuarioId ORDER BY AreaId",
+                new { usuarioId });
+            return datos.ToList();
+        }
+
+        public async Task<List<string>> ObtenerInstitucionesAsync(int usuarioId)
+        {
+            using var conn = _db.CreateConnection();
+            var datos = await conn.QueryAsync<string>(
+                "SELECT InstitucionId FROM dbo.UsuarioInstitucion WHERE UsuarioId = @usuarioId ORDER BY InstitucionId",
+                new { usuarioId });
+            return datos.ToList();
         }
     }
 }
