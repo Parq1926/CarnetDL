@@ -1,0 +1,108 @@
+﻿@page
+@model BitacoraSRV9.Pages.Bitacora.IndexModel
+@{
+    ViewData["Title"] = "Administracion de Bitacora";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/sitebitacora.css" />
+
+<div class="page-header">
+    <h2><i class="fas fa-history"></i> Bitacora de Eventos</h2>
+    <div>
+        <button class="btn btn-info" onclick="cargarBitacora()">
+            <i class="fas fa-sync"></i> Refrescar
+        </button>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- FILTROS -->
+<!-- ======================================== -->
+<div class="filtros-wrapper">
+    <div class="filtros-grid">
+        <div class="form-group">
+            <label>Fecha Inicio</label>
+            <input id="filtroFechaInicio" type="date" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Fecha Fin</label>
+            <input id="filtroFechaFin" type="date" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Usuario</label>
+            <input id="filtroUsuario" type="text" class="form-control" placeholder="Buscar por usuario...">
+        </div>
+        <div class="form-group">
+            <label>Acción</label>
+            <input id="filtroAccion" type="text" class="form-control" placeholder="Buscar por acción...">
+        </div>
+    </div>
+    <div class="filtros-acciones">
+        <div class="form-group" style="display:flex; align-items:center; gap:10px; margin:0;">
+            <input id="filtroSoloErrores" type="checkbox">
+            <label for="filtroSoloErrores" style="margin:0;">Solo errores</label>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="aplicarFiltros()">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                <i class="fas fa-undo"></i> Limpiar
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="alertas"></div>
+
+<div id="loading" class="loading" style="display:none;">
+    <div class="spinner-border"></div>
+    <p class="mt-2">Cargando bitacora...</p>
+</div>
+
+<div id="listaBitacora" class="grid-cards"></div>
+
+<!-- ======================================== -->
+<!-- PAGINACION -->
+<!-- ======================================== -->
+<div id="paginacionContainer" style="display:none; margin-top: 30px;">
+    <div class="paginacion-wrapper">
+        <div class="paginacion-info">
+            Mostrando <span id="inicioMostrar">0</span> - <span id="finMostrar">0</span> de <span id="totalRegistros">0</span> registros
+        </div>
+        <div class="paginacion-botones">
+            <button class="btn-paginacion" id="btnAnterior" onclick="paginaAnterior()">
+                <i class="fas fa-chevron-left"></i> Anterior
+            </button>
+            <span class="paginacion-numero" id="numeroPagina">1</span>
+            <button class="btn-paginacion" id="btnSiguiente" onclick="paginaSiguiente()">
+                Siguiente <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL VER DETALLE -->
+<!-- ======================================== -->
+<div class="modal" id="modalDetalle">
+    <div class="modal-dialog" style="max-width:700px;">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title">Detalle del Evento</h5>
+                <button class="btn-close" onclick="cerrarModalDetalle()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detalleContenido"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalDetalle()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/sitebitacora.js"></script>
+}

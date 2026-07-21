@@ -1,0 +1,6 @@
+﻿namespace LoginSRV1.wwwroot.images
+{
+    public class logo_cuc
+    {
+    }
+}

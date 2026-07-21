@@ -1,0 +1,6 @@
+@UsuariosSRV4_HostAddress = http://localhost:5014
+
+GET {{UsuariosSRV4_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

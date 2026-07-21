@@ -1,0 +1,174 @@
+@page
+@model LoginSRV1.Pages.WelcomeModel
+@{
+    ViewData["Title"] = "Bienvenido";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="welcome-page">
+    <div class="welcome-card">
+        <div class="welcome-header">
+            <div class="welcome-icon">
+                <i class="fas fa-hand-wave"></i>
+            </div>
+            <h1 class="welcome-title" id="welcomeTitle">¡Bienvenido!</h1>
+            <p class="welcome-subtitle">Carnet Digital CUC</p>
+        </div>
+
+        <div class="welcome-info-grid">
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="info-content">
+                    <span class="info-label">Email</span>
+                    <span class="info-value" id="userEmail">-</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <div class="info-content">
+                    <span class="info-label">Tipo de Usuario</span>
+                    <span class="info-value" id="userTipo">-</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">
+                    <i class="fas fa-id-badge"></i>
+                </div>
+                <div class="info-content">
+                    <span class="info-label">ID de Usuario</span>
+                    <span class="info-value" id="userId">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="welcome-message">
+            <p>Seleccione una opción en el menú lateral para comenzar</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const token = localStorage.getItem('accessToken');
+        const nombre = localStorage.getItem('nombreCompleto') || 'Usuario';
+        const email = localStorage.getItem('usuarioEmail') || '-';
+        const tipo = localStorage.getItem('usuarioTipo') || '-';
+        const userId = localStorage.getItem('usuarioId') || '-';
+
+        console.log('=== WELCOME PAGE ===');
+        console.log('Usuario:', nombre);
+        console.log('Email:', email);
+        console.log('Tipo:', tipo);
+
+        if (!token) {
+            console.log('❌ No hay token, redirigiendo a Login');
+            localStorage.setItem('redirectMessage', 'Por favor inicie sesión para utilizar el sistema');
+            window.location.href = '/Login';
+            return;
+        }
+
+        document.getElementById('welcomeTitle').textContent = `¡Bienvenido, ${nombre}!`;
+        document.getElementById('userEmail').textContent = email;
+        document.getElementById('userTipo').textContent = tipo;
+        document.getElementById('userId').textContent = userId;
+    });
+</script>
+
+<style>
+    .welcome-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+        padding: 20px;
+    }
+
+    .welcome-card {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+
+    .welcome-header {
+        margin-bottom: 30px;
+    }
+
+    .welcome-icon {
+        font-size: 48px;
+        color: #003366;
+        margin-bottom: 10px;
+    }
+
+    .welcome-title {
+        color: #003366;
+        font-size: 28px;
+        margin: 0 0 5px 0;
+    }
+
+    .welcome-subtitle {
+        color: #6c757d;
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .welcome-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .info-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .info-icon {
+        font-size: 24px;
+        color: #003366;
+        margin-bottom: 8px;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        display: block;
+        font-size: 14px;
+        color: #333;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .welcome-message {
+        color: #6c757d;
+        font-size: 14px;
+        border-top: 1px solid #e0e0e0;
+        padding-top: 20px;
+        margin-top: 10px;
+    }
+
+    @@media (max-width: 480px) {
+        .welcome-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

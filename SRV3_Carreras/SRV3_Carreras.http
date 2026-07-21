@@ -1,0 +1,6 @@
+@SRV3_Carreras_HostAddress = http://localhost:5280
+
+GET {{SRV3_Carreras_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,399 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Carnet Digital CUC</title>
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ======================================== -->
+        <!-- SIDEBAR - MENÚ LATERAL                   -->
+        <!-- ======================================== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-sidebar">
+                    <div class="logo-icon">CUC</div>
+                    <span class="logo-text">Carnet Digital</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <!-- ======================================== -->
+                    <!-- SECCIÓN 1: INICIO                       -->
+                    <!-- ======================================== -->
+                    <li class="active" id="menu-welcome">
+                        <a href="javascript:void(0)" onclick="abrirInicio();">
+                            <i class="fas fa-home"></i>
+                            <span>Inicio</span>
+                        </a>
+                    </li>
+
+                    <!-- ======================================== -->
+                    <!-- SECCIÓN 2: GESTIÓN DE USUARIOS           -->
+                    <!-- ======================================== -->
+                    <li id="menu-usuarios">
+                        <a href="javascript:void(0)" onclick="abrirUsuarios();">
+                            <i class="fas fa-users"></i>
+                            <span>Usuarios</span>
+                        </a>
+                    </li>
+
+                    <!-- ======================================== -->
+                    <!-- SECCIÓN 3: CATÁLOGOS                     -->
+                    <!-- ======================================== -->
+                    <li id="menu-tipos-usuario">
+                        <a href="javascript:void(0)" onclick="abrirTiposUsuario();">
+                            <i class="fas fa-user-tag"></i>
+                            <span>Tipos de Usuario</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-tipos-identificacion">
+                        <a href="javascript:void(0)" onclick="abrirTiposIdentificacion();">
+                            <i class="fas fa-id-card"></i>
+                            <span>Tipos de Identificación</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-carreras">
+                        <a href="javascript:void(0)" onclick="abrirCarreras();">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Carreras</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-areas">
+                        <a href="javascript:void(0)" onclick="abrirAreas();">
+                            <i class="fas fa-building"></i>
+                            <span>Áreas</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-instituciones">
+                        <a href="javascript:void(0)" onclick="abrirInstituciones();">
+                            <i class="fas fa-university"></i>
+                            <span>Instituciones</span>
+                        </a>
+                    </li>
+
+                    <!-- ======================================== -->
+                    <!-- SECCIÓN 4: GESTIÓN DE USUARIOS           -->
+                    <!-- ======================================== -->
+                    <li id="menu-fotos">
+                        <a href="javascript:void(0)" onclick="abrirFotografias();">
+                            <i class="fas fa-camera"></i>
+                            <span>Fotografías</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-estado">
+                        <a href="javascript:void(0)" onclick="abrirEstadoUsuario();">
+                            <i class="fas fa-toggle-on"></i>
+                            <span>Estado de Usuario</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-qr">
+                        <a href="javascript:void(0)" onclick="abrirGenerarQR();">
+                            <i class="fas fa-qrcode"></i>
+                            <span>Generar QR</span>
+                        </a>
+                    </li>
+
+                    <!-- ======================================== -->
+                    <!-- SEPARADOR                               -->
+                    <!-- ======================================== -->
+                    <li class="divider"></li>
+
+                    <!-- ======================================== -->
+                    <!-- SECCIÓN 5: ADMINISTRACIÓN               -->
+                    <!-- ======================================== -->
+                    <li id="menu-modulos">
+                        <a href="javascript:void(0)" onclick="abrirModulos();">
+                            <i class="fas fa-cubes"></i>
+                            <span>Módulos</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-roles">
+                        <a href="javascript:void(0)" onclick="abrirRoles();">
+                            <i class="fas fa-lock"></i>
+                            <span>Roles</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-bitacoras">
+                        <a href="javascript:void(0)" onclick="abrirBitacoras();">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Bitácoras</span>
+                        </a>
+                    </li>
+
+                    <li id="menu-parametros">
+                        <a href="javascript:void(0)" onclick="abrirParametros();">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Parámetros</span>
+                        </a>
+                    </li>
+
+                    <!-- ======================================== -->
+                    <!-- SEPARADOR                               -->
+                    <!-- ======================================== -->
+                    <li class="divider"></li>
+
+                    <!-- ======================================== -->
+                    <!-- SECCIÓN 6: SALIDA                       -->
+                    <!-- ======================================== -->
+                    <li>
+                        <a href="javascript:void(0)" onclick="logout();" class="logout-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- ======================================== -->
+        <!-- CONTENIDO PRINCIPAL                      -->
+        <!-- ======================================== -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span class="page-title">@ViewData["Title"]</span>
+                </div>
+                <div class="top-bar-right">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <span class="user-name" id="userName">Usuario</span>
+                        <span class="user-role" id="userRole"></span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script>
+            // ========================================
+            // 🔐 VERIFICACIÓN DE AUTENTICACIÓN
+            // ========================================
+            document.addEventListener('DOMContentLoaded', function() {
+                var token = localStorage.getItem('accessToken');
+                var currentPath = window.location.pathname;
+                var isLoginPage = currentPath.includes('/Login');
+
+                if (!token && !isLoginPage) {
+                    localStorage.setItem('redirectMessage', 'Por favor inicie sesión para utilizar el sistema');
+                    window.location.href = '/Login';
+                    return;
+                }
+
+                if (token) {
+                    var nombre = localStorage.getItem('nombreCompleto') || 'Usuario';
+                    var tipo = localStorage.getItem('usuarioTipo') || '';
+                    document.getElementById('userName').textContent = nombre;
+                    document.getElementById('userRole').textContent = tipo ? '(' + tipo + ')' : '';
+                }
+
+                // Marcar menú activo
+                var menuItems = document.querySelectorAll('.sidebar-nav ul li');
+                menuItems.forEach(function(item) {
+                    var link = item.querySelector('a');
+                    if (link) {
+                        var href = link.getAttribute('href');
+                        if (href === currentPath || (currentPath === '/' && href === '/Welcome')) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    }
+                });
+            });
+
+            // ========================================
+            // FUNCIONES GENERALES
+            // ========================================
+
+            function toggleSidebar() {
+                document.getElementById('sidebar').classList.toggle('open');
+            }
+
+            function logout() {
+                localStorage.clear();
+                window.location.href = '/Login';
+            }
+
+            // ========================================
+            // 🔗 FUNCIONES PARA ABRIR MICROSERVICIOS
+            // (TODOS EN LA MISMA PESTAÑA)
+            // ========================================
+
+            // 🏠 INICIO (WELCOME)
+            function abrirInicio() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = '/Welcome';
+            }
+
+            // 👥 USUARIOS
+            function abrirUsuarios() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7206/Usuarios';
+            }
+
+            function abrirTiposUsuario() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                // ✅ Pasar el token como parámetro en la URL
+                window.location.href = 'https://localhost:7020/TiposUsuario?token=' + encodeURIComponent(token);
+            }
+
+            function abrirTiposIdentificacion() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                // ✅ Pasar el token como parámetro en la URL
+                window.location.href = 'https://localhost:7021/TiposIdentificacion?token=' + encodeURIComponent(token);
+            }
+
+            // 📚 CARRERAS
+            function abrirCarreras() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'http://localhost:5280/Carreras';
+            }
+
+            // 🏢 ÁREAS
+            function abrirAreas() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'http://localhost:5202/Areas';
+            }
+
+            // 🏛️ INSTITUCIONES
+            function abrirInstituciones() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'http://localhost:7002/Instituciones';
+            }
+
+            // 📸 FOTOGRAFÍAS
+            function abrirFotografias() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7025/Fotografias';
+            }
+
+            // 🔄 ESTADO DE USUARIO
+            function abrirEstadoUsuario() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7026/EstadoUsuario';
+            }
+
+            // 📱 GENERAR QR
+            function abrirGenerarQR() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7027/GenerarQR';
+            }
+
+            // 📦 MÓDULOS
+            function abrirModulos() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7028/Modulos';
+            }
+
+            // 🔐 ROLES
+            function abrirRoles() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7029/Roles';
+            }
+
+            // 📋 BITÁCORAS
+            function abrirBitacoras() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7030/Bitacoras';
+            }
+
+            // ⚙️ PARÁMETROS
+            function abrirParametros() {
+                var token = localStorage.getItem('accessToken');
+                if (!token) {
+                    alert('Debe iniciar sesión primero');
+                    window.location.href = '/Login';
+                    return;
+                }
+                window.location.href = 'https://localhost:7031/Parametros';
+            }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,34 @@
+USE [tiusr22pl_FotografiaDB]
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- Tabla principal
+CREATE TABLE [dbo].[FOTOGRAFIAUSUARIO](
+    [ID]                     [int] IDENTITY(1,1) NOT NULL,
+    [USUARIO_IDENTIFICACION] [varchar](255) NOT NULL,
+    [FOTOGRAFIA_BASE64]      [varchar](max) NOT NULL,
+    [FECHA_CREACION]         [datetime] NOT NULL,
+    [FECHA_MODIFICACION]     [datetime] NULL,
+    PRIMARY KEY CLUSTERED ([ID] ASC)
+        WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF,
+              IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON,
+              ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF)
+        ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[FOTOGRAFIAUSUARIO]
+    ADD DEFAULT (getdate()) FOR [FECHA_CREACION]
+GO
+
+-- Datos de prueba
+-- Nota: los valores Base64 son cadenas cortas de ejemplo; en producción serán imágenes reales
+INSERT INTO [dbo].[FOTOGRAFIAUSUARIO] ([USUARIO_IDENTIFICACION], [FOTOGRAFIA_BASE64]) VALUES
+('101110111', '/9j/4AAQSkZJRgABAQEASABIAAD/ejemplo1'),
+('207890456', '/9j/4AAQSkZJRgABAQEASABIAAD/ejemplo2'),
+('304560789', '/9j/4AAQSkZJRgABAQEASABIAAD/ejemplo3')
+GO

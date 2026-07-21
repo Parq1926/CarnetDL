@@ -1,0 +1,6 @@
+@SRV11_AutoRegistro_HostAddress = http://localhost:5227
+
+GET {{SRV11_AutoRegistro_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
