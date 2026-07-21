@@ -1,0 +1,58 @@
+@page
+@model CarnetDigitalWeb.Pages.Parametro.IndexModel
+@{
+    ViewData["Title"] = "Parámetros";
+}
+
+<div class="card-panel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="text-muted mb-0">SRV15 - Parametro</h6>
+        <a class="btn btn-primary btn-sm" asp-page="Form">
+            <i class="bi bi-plus-lg"></i> Nuevo
+        </a>
+    </div>
+
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Valor</th>
+                <th style="width:100px">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Items)
+            {
+                <tr>
+                    <td>@p.Id</td>
+                    <td>@p.Valor</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary" asp-page="Form" asp-route-id="@p.Id">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="post" asp-page-handler="Eliminar" asp-route-id="@p.Id" class="d-inline"
+                              onsubmit="return confirm('¿Realmente desea eliminar el elemento seleccionado?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.TotalPaginas > 1)
+    {
+        <nav>
+            <ul class="pagination pagination-sm">
+                @for (var i = 1; i <= Model.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == Model.Pagina ? "active" : "")">
+                        <a class="page-link" asp-page="Index" asp-route-pagina="@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>

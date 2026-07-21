@@ -1,0 +1,27 @@
+@page
+@model CarnetDigitalWeb.Pages.Qr.IndexModel
+@{
+    ViewData["Title"] = "Código QR";
+}
+
+<div class="card-panel" style="max-width:520px">
+    <h6 class="text-muted mb-3">SRV14 - CarnetQR</h6>
+
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">Identificación del usuario</label>
+            <input type="text" class="form-control" asp-for="Identificacion" placeholder="Ej: 302450678" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-qr-code-scan"></i> Generar QR
+        </button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.QrBase64))
+    {
+        <div class="mt-4">
+            <hr />
+            <img class="qr-preview" src="data:image/png;base64,@Model.QrBase64" />
+        </div>
+    }
+</div>

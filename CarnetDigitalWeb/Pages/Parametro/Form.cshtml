@@ -1,0 +1,32 @@
+@page "{id?}"
+@model CarnetDigitalWeb.Pages.Parametro.FormModel
+@{
+    ViewData["Title"] = Model.EsEdicion ? "Editar parámetro" : "Nuevo parámetro";
+}
+
+<div class="card-panel" style="max-width:520px">
+    <h6 class="text-muted mb-3">SRV15 - Parametro</h6>
+
+    <form method="post">
+        <input type="hidden" asp-for="EsEdicion" />
+        <div class="mb-3">
+            <label class="form-label">Código</label>
+            @if (Model.EsEdicion)
+            {
+                <input type="text" class="form-control" value="@Model.Id" disabled />
+                <input type="hidden" asp-for="Id" />
+            }
+            else
+            {
+                <input type="text" class="form-control" asp-for="Id" />
+            }
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Valor (máx. 500 caracteres)</label>
+            <textarea class="form-control" asp-for="Valor" rows="3" maxlength="500"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a class="btn btn-secondary" asp-page="Index">Cancelar</a>
+    </form>
+</div>

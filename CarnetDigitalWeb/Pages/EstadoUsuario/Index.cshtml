@@ -1,0 +1,33 @@
+@page
+@model CarnetDigitalWeb.Pages.EstadoUsuario.IndexModel
+@{
+    ViewData["Title"] = "Cambio de Estado";
+}
+
+<div class="card-panel" style="max-width:520px">
+    <h6 class="text-muted mb-3">SRV12 - EstadoUsuario</h6>
+
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">Identificador del usuario</label>
+            <input type="number" class="form-control" asp-for="UsuarioId" placeholder="Ej: 1" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Código de estado</label>
+            <input type="text" class="form-control" asp-for="Estado" placeholder="Ej: Activo, Inactivo" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2-circle"></i> Cambiar estado
+        </button>
+    </form>
+
+    @if (Model.Resultado is not null)
+    {
+        <div class="mt-4">
+            <hr />
+            <p class="mb-1"><strong>Usuario:</strong> @Model.Resultado.NombreCompleto</p>
+            <p class="mb-1"><strong>Id usuario:</strong> @Model.Resultado.UsuarioId</p>
+            <p class="mb-1"><strong>Estado actual:</strong> <span class="badge bg-success">@Model.Resultado.Estado</span></p>
+        </div>
+    }
+</div>
