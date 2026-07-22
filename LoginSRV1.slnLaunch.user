@@ -1,0 +1,30 @@
+[
+  {
+    "Name": "Nuevo perfil",
+    "Projects": [
+      {
+        "Path": "LoginSRV1\\LoginSRV1.csproj",
+        "Action": "Start"
+      },
+      {
+<<<<<<< HEAD
+        "Path": "TiposUsuarioSRV5\\TiposUsuarioSRV5.csproj",
+=======
+        "Path": "UsuariosSRV4\\UsuariosSRV4.csproj",
+>>>>>>> a7a79ac (Actualizacion del Login)
+        "Action": "Start"
+      },
+      {
+        "Path": "TipoIdentificacionSRV6\\TipoIdentificacionSRV6.csproj",
+        "Action": "Start"
+<<<<<<< HEAD
+=======
+      },
+      {
+        "Path": "TiposUsuarioSRV5\\TiposUsuarioSRV5.csproj",
+        "Action": "Start"
+>>>>>>> a7a79ac (Actualizacion del Login)
+      }
+    ]
+  }
+]

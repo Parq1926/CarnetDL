@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="../SRV2_Instituciones/SRV2_Instituciones.csproj" />
+  <Project Path="../SRV3_Carreras/SRV3_Carreras.csproj" />
+  <Project Path="../SRV4_Areas/SRV4_Areas.csproj" />
+  <Project Path="../TipoIdentificacionSRV6/TipoIdentificacionSRV6.csproj" />
+  <Project Path="../TiposUsuarioSRV5/TiposUsuarioSRV5.csproj" />
+  <Project Path="../UsuariosSRV4/UsuariosSRV4.csproj" />
+  <Project Path="LoginSRV1.csproj" />
+</Solution>

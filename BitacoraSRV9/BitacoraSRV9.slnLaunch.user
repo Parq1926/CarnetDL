@@ -1,0 +1,39 @@
+[
+  {
+    "Name": "Nuevo perfil",
+    "Projects": [
+      {
+        "Path": "..\\LoginSRV1\\LoginSRV1.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\TipoIdentificacionSRV6\\TipoIdentificacionSRV6.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\TipoUsuarioSRV5\\TipoUsuarioSRV5.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "BitacoraSRV9.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\MicroserviciosInstituciones\\SRV4_Areas\\SRV4_Areas.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\MicroserviciosInstituciones\\SRV3_Carreras\\SRV3_Carreras.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\MicroserviciosInstituciones\\SRV2_Instituciones\\SRV2_Instituciones.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\RolSRV8\\RolSRV8.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

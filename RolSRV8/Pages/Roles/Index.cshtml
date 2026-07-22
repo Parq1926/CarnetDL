@@ -1,0 +1,146 @@
+﻿@page
+@model RolSRV8.Pages.Roles.IndexModel
+@{
+    ViewData["Title"] = "Administracion de Roles";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/siteroles.css" />
+
+<div class="page-header">
+    <h2><i class="fas fa-user-tag"></i> Lista de Roles</h2>
+    <div>
+        <button class="btn btn-primary" onclick="abrirModalCrear()">
+            <i class="fas fa-plus"></i> Nuevo Rol
+        </button>
+        <button class="btn btn-info" onclick="abrirModalBuscar()">
+            <i class="fas fa-search"></i> Buscar por ID
+        </button>
+    </div>
+</div>
+
+<div id="alertas"></div>
+
+<div id="loading" class="loading" style="display:none;">
+    <div class="spinner-border"></div>
+    <p class="mt-2">Cargando roles...</p>
+</div>
+
+<div id="listaRoles" class="grid-cards"></div>
+
+<!-- ======================================== -->
+<!-- PAGINACION -->
+<!-- ======================================== -->
+<div id="paginacionContainer" style="display:none; margin-top: 30px;">
+    <div class="paginacion-wrapper">
+        <div class="paginacion-info">
+            Mostrando <span id="inicioMostrar">0</span> - <span id="finMostrar">0</span> de <span id="totalRegistros">0</span> roles
+        </div>
+        <div class="paginacion-botones">
+            <button class="btn-paginacion" id="btnAnterior" onclick="paginaAnterior()">
+                <i class="fas fa-chevron-left"></i> Anterior
+            </button>
+            <span class="paginacion-numero" id="numeroPagina">1</span>
+            <button class="btn-paginacion" id="btnSiguiente" onclick="paginaSiguiente()">
+                Siguiente <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL BUSCAR POR ID -->
+<!-- ======================================== -->
+<div class="modal" id="modalBuscar">
+    <div class="modal-dialog" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title">Buscar Rol por ID</h5>
+                <button class="btn-close" onclick="cerrarModalBuscar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Ingrese el ID del rol</label>
+                    <input id="buscarId" type="number" class="form-control" placeholder="Ej: 1, 2, 3..." min="1">
+                </div>
+                <div id="buscarResultado" style="margin-top:15px; display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalBuscar()">Cancelar</button>
+                <button class="btn btn-info" onclick="buscarRolPorId()">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL CREAR / EDITAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalFormulario">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModal">Nuevo Rol</h5>
+                <button class="btn-close" onclick="cerrarModalFormulario()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="idRol" value="0">
+
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input id="nombre" class="form-control" placeholder="Nombre del rol">
+                    <div class="invalid-feedback" id="errNombre"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Pantallas *</label>
+                    <input id="pantallas" class="form-control" placeholder="Pantallas permitidas (separadas por comas)">
+                    <div class="invalid-feedback" id="errPantallas"></div>
+                    <small style="color: #6c757d; font-size: 12px;">Ejemplo: usuarios, roles, reportes, configuracion</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalFormulario()">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarRol()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL ELIMINAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalEliminar">
+    <div class="modal-dialog" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title">Confirmar Eliminacion</h5>
+                <button class="btn-close" onclick="cerrarModalEliminar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Realmente desea eliminar el elemento seleccionado?</p>
+                <p style="color: #6c757d; font-size: 14px; margin-top: 5px;">
+                    <strong id="nombreEliminar"></strong>
+                </p>
+                <div id="usuariosAsignados" style="display:none; margin-top:10px; padding:10px; background:#fff3cd; border-radius:8px; border:1px solid #ffc107;">
+                    <i class="fas fa-exclamation-triangle" style="color:#856404;"></i>
+                    <span style="color:#856404;" id="mensajeUsuarios"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalEliminar()">Cancelar</button>
+                <button class="btn btn-danger" onclick="eliminarRol()">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/siteroles.js"></script>
+}

@@ -1,0 +1,42 @@
+@page
+@model CarnetDigitalWeb.Pages.Fotografia.IndexModel
+@{
+    ViewData["Title"] = "Fotografía";
+}
+
+<div class="card-panel" style="max-width:600px">
+    <h6 class="text-muted mb-3">SRV13 - Fotografia</h6>
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label">Identificador del usuario</label>
+            <input type="number" class="form-control" asp-for="UsuarioId" placeholder="Ej: 1" />
+        </div>
+
+        <div class="d-flex gap-2 mb-4">
+            <button type="submit" asp-page-handler="Obtener" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download"></i> Obtener
+            </button>
+            <button type="submit" asp-page-handler="Eliminar" class="btn btn-outline-danger btn-sm"
+                    onclick="return confirm('¿Realmente desea eliminar la fotografía del usuario indicado?');">
+                <i class="bi bi-trash"></i> Eliminar
+            </button>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Nueva fotografía (máx. 1 MB, formato 4:3)</label>
+            <input type="file" class="form-control" asp-for="Foto" accept="image/*" />
+        </div>
+        <button type="submit" asp-page-handler="Actualizar" class="btn btn-primary">
+            <i class="bi bi-upload"></i> Actualizar fotografía
+        </button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.FotoBase64))
+    {
+        <div class="mt-4">
+            <hr />
+            <img class="foto-preview" src="data:image/jpeg;base64,@Model.FotoBase64" />
+        </div>
+    }
+</div>

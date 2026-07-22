@@ -1,0 +1,500 @@
+﻿@page
+@model SRV2_Instituciones.Pages.Instituciones.IndexModel
+@{
+    ViewData["Title"] = "Administracion de Instituciones";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/siteinstituciones.css" />
+
+<div class="page-header">
+    <h2><i class="fas fa-university"></i> Lista de Instituciones</h2>
+    <div>
+        <button class="btn btn-primary" onclick="abrirModalCrear()">
+            <i class="fas fa-plus"></i> Nueva Institucion
+        </button>
+        <button class="btn btn-info" onclick="abrirModalBuscar()">
+            <i class="fas fa-search"></i> Buscar por ID
+        </button>
+    </div>
+</div>
+
+<div id="alertas"></div>
+
+<div id="loading" class="loading" style="display:none;">
+    <div class="spinner-border"></div>
+    <p class="mt-2">Cargando instituciones...</p>
+</div>
+
+<div id="listaInstituciones" class="institucion-grid"></div>
+
+<!-- ======================================== -->
+<!-- MODAL BUSCAR POR ID -->
+<!-- ======================================== -->
+<div class="modal" id="modalBuscar">
+    <div class="modal-dialog" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#17a2b8;">
+                <h5 class="modal-title">Buscar Institucion por ID</h5>
+                <button class="btn-close" onclick="cerrarModalBuscar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Ingrese el ID de la institucion</label>
+                    <input id="buscarId" type="number" class="form-control" placeholder="Ej: 1, 2, 3..." min="1">
+                </div>
+                <div id="buscarResultado" style="margin-top:15px; display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalBuscar()">Cancelar</button>
+                <button class="btn btn-info" onclick="buscarInstitucionPorId()">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL CREAR / EDITAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalFormulario">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModal">Nueva Institucion</h5>
+                <button class="btn-close" onclick="cerrarModalFormulario()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="idInstitucion" value="0">
+
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input id="nombre" class="form-control" placeholder="Nombre de la institucion">
+                    <div class="invalid-feedback" id="errNombre"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input id="email" class="form-control" placeholder="ejemplo@cuc.ac.cr">
+                    <small style="color: #6c757d; font-size: 12px;">Solo @@cuc.ac.cr o @@cuc.cr</small>
+                    <div class="invalid-feedback" id="errEmail"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Telefono *</label>
+                    <input id="telefono" class="form-control" placeholder="Solo numeros">
+                    <div class="invalid-feedback" id="errTelefono"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Dominios *</label>
+                    <input id="dominios" class="form-control" placeholder="cuc.ac.cr, cuc.cr">
+                    <small style="color: #6c757d; font-size: 12px;">Separados por coma. Ej: cuc.ac.cr, cuc.cr</small>
+                    <div class="invalid-feedback" id="errDominios"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalFormulario()">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarInstitucion()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL ELIMINAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalEliminar">
+    <div class="modal-dialog" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#dc3545;">
+                <h5 class="modal-title">Confirmar Eliminacion</h5>
+                <button class="btn-close" onclick="cerrarModalEliminar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Esta seguro de eliminar la institucion <strong id="nombreEliminar"></strong>?</p>
+                <p style="color: #6c757d; font-size: 14px;">Esta accion no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalEliminar()">Cancelar</button>
+                <button class="btn btn-danger" onclick="eliminarInstitucion()">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = window.location.origin + '/institucion';
+    let idEliminar = 0;
+
+    // ========================================
+    // FUNCIONES DE MODALES
+    // ========================================
+
+    function abrirModalCrear() {
+        document.getElementById('tituloModal').textContent = 'Nueva Institucion';
+        document.getElementById('idInstitucion').value = '0';
+        document.getElementById('nombre').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('telefono').value = '';
+        document.getElementById('dominios').value = '';
+        limpiarErrores();
+        document.getElementById('modalFormulario').style.display = 'flex';
+    }
+
+    function cerrarModalFormulario() {
+        document.getElementById('modalFormulario').style.display = 'none';
+        limpiarErrores();
+    }
+
+    function abrirModalBuscar() {
+        document.getElementById('buscarId').value = '';
+        document.getElementById('buscarResultado').style.display = 'none';
+        document.getElementById('buscarResultado').innerHTML = '';
+        document.getElementById('modalBuscar').style.display = 'flex';
+    }
+
+    function cerrarModalBuscar() {
+        document.getElementById('modalBuscar').style.display = 'none';
+    }
+
+    function abrirModalEliminar(id, nombre) {
+        idEliminar = id;
+        document.getElementById('nombreEliminar').textContent = nombre;
+        document.getElementById('modalEliminar').style.display = 'flex';
+    }
+
+    function cerrarModalEliminar() {
+        document.getElementById('modalEliminar').style.display = 'none';
+    }
+
+    // ========================================
+    // ALERTAS Y LOADING
+    // ========================================
+
+    function mostrarAlerta(mensaje, tipo) {
+        const div = document.getElementById('alertas');
+        div.innerHTML = `
+            <div class="alert alert-${tipo} alert-dismissible">
+                ${mensaje}
+                <button onclick="this.parentElement.remove()" style="float:right; background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+        `;
+        setTimeout(() => { div.innerHTML = ''; }, 4000);
+    }
+
+    function mostrarLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    // ========================================
+    // BUSCAR POR ID
+    // ========================================
+
+    async function buscarInstitucionPorId() {
+        const id = document.getElementById('buscarId').value.trim();
+
+        if (!id || parseInt(id) <= 0) {
+            mostrarAlerta('Ingrese un ID valido mayor a 0', 'warning');
+            return;
+        }
+
+        const resultadoDiv = document.getElementById('buscarResultado');
+        resultadoDiv.style.display = 'block';
+        resultadoDiv.innerHTML = '<div class="loading"><div class="spinner-border"></div><p>Buscando...</p></div>';
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`);
+
+            if (response.status === 404) {
+                resultadoDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> No se encontro ninguna institucion con ID ${id}
+                    </div>
+                `;
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Error al buscar');
+            }
+
+            const i = await response.json();
+
+            resultadoDiv.innerHTML = `
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #dee2e6;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:14px;">
+                        <div><strong>ID:</strong> ${i.id}</div>
+                        <div><strong>Nombre:</strong> ${i.nombre}</div>
+                        <div><strong>Email:</strong> ${i.email}</div>
+                        <div><strong>Telefono:</strong> ${i.telefono}</div>
+                        <div><strong>Dominios:</strong> ${i.dominios}</div>
+                        <div><strong>Estado:</strong> <span class="${i.activo ? 'badge-success' : 'badge-danger'}">${i.activo ? 'Activo' : 'Inactivo'}</span></div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:8px;">
+                        <button class="btn btn-warning btn-sm" onclick="editarInstitucion(${i.id})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="abrirModalEliminar(${i.id}, '${i.nombre}')">Eliminar</button>
+                        <button class="btn btn-secondary btn-sm" onclick="cerrarModalBuscar()">Cerrar</button>
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            resultadoDiv.innerHTML = `
+                <div class="alert alert-danger">Error al buscar: ${error.message}</div>
+            `;
+        }
+    }
+
+    // ========================================
+    // VALIDACIONES
+    // ========================================
+
+    function limpiarErrores() {
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    }
+
+    function mostrarError(campo, mensaje) {
+        const el = document.getElementById(campo);
+        const err = document.getElementById('err' + campo.charAt(0).toUpperCase() + campo.slice(1));
+        el.classList.add('is-invalid');
+        err.textContent = mensaje;
+    }
+
+    function validarFormulario() {
+        let valido = true;
+        limpiarErrores();
+
+        const nombre = document.getElementById('nombre').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const telefono = document.getElementById('telefono').value.trim();
+        const dominios = document.getElementById('dominios').value.trim();
+
+        if (!nombre) { mostrarError('nombre', 'El nombre es requerido'); valido = false; }
+
+        if (!email) {
+            mostrarError('email', 'El email es requerido');
+            valido = false;
+        } else {
+            const emailRegex = /^[^\s@@]+@@(cuc\.ac\.cr|cuc\.cr)$/;
+            if (!emailRegex.test(email)) {
+                mostrarError('email', 'Solo se permiten @@cuc.ac.cr o @@cuc.cr');
+                valido = false;
+            }
+        }
+
+        if (!telefono) {
+            mostrarError('telefono', 'El telefono es requerido');
+            valido = false;
+        } else if (!/^\d+$/.test(telefono)) {
+            mostrarError('telefono', 'Solo numeros');
+            valido = false;
+        }
+
+        if (!dominios) {
+            mostrarError('dominios', 'Los dominios son requeridos');
+            valido = false;
+        } else {
+            const dominiosValidos = ['cuc.ac.cr', 'cuc.cr'];
+            const dominiosArray = dominios.split(',').map(d => d.trim().toLowerCase());
+            let todosValidos = true;
+            dominiosArray.forEach(d => {
+                if (!dominiosValidos.includes(d)) {
+                    todosValidos = false;
+                }
+            });
+            if (!todosValidos) {
+                mostrarError('dominios', 'Solo se permiten: cuc.ac.cr, cuc.cr');
+                valido = false;
+            }
+        }
+
+        return valido;
+    }
+
+    function obtenerDatosFormulario() {
+        const data = {
+            nombre: document.getElementById('nombre').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            telefono: document.getElementById('telefono').value.trim(),
+            dominios: document.getElementById('dominios').value.trim()
+        };
+
+        const id = document.getElementById('idInstitucion').value;
+        if (id !== '0') {
+            data.ID = parseInt(id);
+        }
+
+        return data;
+    }
+
+    // ========================================
+    // CRUD - LISTAR TODOS
+    // ========================================
+
+    async function cargarInstituciones() {
+        const container = document.getElementById('listaInstituciones');
+        mostrarLoading(true);
+
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error('Error al cargar');
+            const instituciones = await response.json();
+
+            if (!instituciones || instituciones.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-university fa-4x"></i>
+                        <p>No hay instituciones registradas</p>
+                        <button class="btn btn-primary" onclick="abrirModalCrear()">
+                            <i class="fas fa-plus"></i> Crear primera institucion
+                        </button>
+                    </div>
+                `;
+                mostrarLoading(false);
+                return;
+            }
+
+            let html = '';
+            instituciones.forEach(function(i) {
+                html += `
+                    <div class="institucion-card">
+                        <div class="institucion-card-header">
+                            <h3>${i.nombre}</h3>
+                            <span class="${i.activo ? 'badge-success' : 'badge-danger'}">${i.activo ? 'Activo' : 'Inactivo'}</span>
+                        </div>
+                        <div class="institucion-card-body">
+                            <div class="info-row">
+                                <span class="label"><i class="fas fa-id-badge"></i> ID:</span>
+                                <span class="value">${i.id}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label"><i class="fas fa-envelope"></i> Email:</span>
+                                <span class="value">${i.email}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label"><i class="fas fa-phone"></i> Telefono:</span>
+                                <span class="value">${i.telefono}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label"><i class="fas fa-globe"></i> Dominios:</span>
+                                <span class="value">${i.dominios}</span>
+                            </div>
+                        </div>
+                        <div class="institucion-card-footer">
+                            <button class="btn-sm btn-info" onclick="editarInstitucion(${i.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-sm btn-danger" onclick="abrirModalEliminar(${i.id}, '${i.nombre}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        } catch (error) {
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> Error al cargar instituciones
+                </div>
+            `;
+        }
+
+        mostrarLoading(false);
+    }
+
+    // ========================================
+    // CRUD - CREAR / EDITAR
+    // ========================================
+
+    async function guardarInstitucion() {
+        if (!validarFormulario()) return;
+
+        const id = document.getElementById('idInstitucion').value;
+        const data = obtenerDatosFormulario();
+        const isEdit = id !== '0';
+        const url = isEdit ? `${API_URL}/${id}` : API_URL;
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                mostrarAlerta(isEdit ? 'Institucion actualizada' : 'Institucion creada', 'success');
+                cerrarModalFormulario();
+                cargarInstituciones();
+                cerrarModalBuscar();
+            } else {
+                const error = await response.json();
+                mostrarAlerta(error.error || 'Error al guardar', 'danger');
+            }
+        } catch (error) {
+            mostrarAlerta('Error de conexion: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // CRUD - EDITAR (OBTENER POR ID + LLENAR MODAL)
+    // ========================================
+
+    async function editarInstitucion(id) {
+        try {
+            const response = await fetch(`${API_URL}/${id}`);
+            if (!response.ok) throw new Error('Error al obtener datos');
+            const i = await response.json();
+
+            document.getElementById('tituloModal').textContent = 'Editar Institucion';
+            document.getElementById('idInstitucion').value = i.id;
+            document.getElementById('nombre').value = i.nombre;
+            document.getElementById('email').value = i.email;
+            document.getElementById('telefono').value = i.telefono;
+            document.getElementById('dominios').value = i.dominios;
+            limpiarErrores();
+            document.getElementById('modalFormulario').style.display = 'flex';
+        } catch (error) {
+            mostrarAlerta('Error al cargar datos: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // CRUD - ELIMINAR
+    // ========================================
+
+    async function eliminarInstitucion() {
+        try {
+            const response = await fetch(`${API_URL}/${idEliminar}`, { method: 'DELETE' });
+            const result = await response.json();
+
+            if (response.ok) {
+                cerrarModalEliminar();
+                mostrarAlerta(result.message || 'Institucion eliminada exitosamente', 'success');
+                cargarInstituciones();
+                cerrarModalBuscar();
+            } else {
+                mostrarAlerta(result.error || 'Error al eliminar', 'danger');
+            }
+        } catch (error) {
+            mostrarAlerta('Error de conexion: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // INICIALIZAR
+    // ========================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarInstituciones();
+    });
+</script>

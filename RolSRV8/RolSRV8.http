@@ -1,0 +1,6 @@
+@RolSRV8_HostAddress = http://localhost:5191
+
+GET {{RolSRV8_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

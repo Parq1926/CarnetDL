@@ -1,0 +1,6 @@
+@SRV2_Instituciones_HostAddress = http://localhost:5070
+
+GET {{SRV2_Instituciones_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

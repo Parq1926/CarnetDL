@@ -1,0 +1,6 @@
+@TiposUsuarioSRV5_HostAddress = http://localhost:5017
+
+GET {{TiposUsuarioSRV5_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

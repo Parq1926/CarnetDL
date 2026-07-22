@@ -1,0 +1,19 @@
+<Solution>
+  <Project Path="BitacoraSRV9/BitacoraSRV9.csproj" />
+  <Project Path="CarnetQR/SRV14_CarnetQR.csproj" />
+  <Project Path="EstadoUsuario/SRV12_EstadoUsuario.csproj" />
+  <Project Path="Fotografia/SRV13_Fotografia.csproj" />
+  <Project Path="LoginSRV1/LoginSRV1.csproj" />
+  <Project Path="Parametro/SRV15_Parametro.csproj" />
+  <Project Path="RolSRV8/RolSRV8.csproj" />
+  <Project Path="SRV11_AutoRegistro/SRV11_AutoRegistro.csproj" />
+  <Project Path="SRV2_Instituciones/SRV2_Instituciones.csproj" />
+  <Project Path="SRV3_Carreras/SRV3_Carreras.csproj" />
+  <Project Path="SRV4_Areas/SRV4_Areas.csproj" />
+  <Project Path="TipoIdentificacionSRV6/TipoIdentificacionSRV6.csproj" />
+  <Project Path="TiposUsuarioSRV5/TiposUsuarioSRV5.csproj" />
+<<<<<<< HEAD
+=======
+  <Project Path="UsuariosSRV4/UsuariosSRV4.csproj" Id="d338235c-a143-48db-966d-0fa3e3dbe33a" />
+>>>>>>> a7a79ac (Actualizacion del Login)
+</Solution>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " - Carnet Digital" : "Carnet Digital CUC")</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+            :root {
+                --azul: #1b2a4a;
+                --azul-claro: #24365f;
+            }
+
+            body {
+                background: #f4f6f9;
+            }
+
+            .sidebar {
+                width: 230px;
+                min-height: 100vh;
+                background: var(--azul);
+                position: fixed;
+                left: 0;
+                top: 0;
+                overflow-y: auto;
+            }
+
+                .sidebar .brand {
+                    color: #fff;
+                    padding: 18px 16px;
+                    font-weight: 600;
+                    border-bottom: 1px solid rgba(255,255,255,.1);
+                }
+
+                .sidebar a {
+                    display: block;
+                    color: #c7d0e0;
+                    padding: 12px 18px;
+                    text-decoration: none;
+                    font-size: .95rem;
+                    border-left: 3px solid transparent;
+                    transition: all 0.2s;
+                }
+
+                    .sidebar a:hover {
+                        background: var(--azul-claro);
+                        color: #fff;
+                        border-left-color: #ffd700;
+                    }
+
+                    .sidebar a.active {
+                        background: var(--azul-claro);
+                        color: #ffd700;
+                        border-left-color: #ffd700;
+                    }
+
+                    .sidebar a i {
+                        margin-right: 10px;
+                        width: 20px;
+                        text-align: center;
+                    }
+
+                .sidebar .logout-link {
+                    color: #e74c3c;
+                    border-top: 1px solid rgba(255,255,255,.1);
+                    margin-top: 10px;
+                    padding-top: 15px;
+                }
+
+                    .sidebar .logout-link:hover {
+                        background: rgba(231, 76, 60, 0.15);
+                        color: #ff6b6b;
+                        border-left-color: #e74c3c;
+                    }
+
+                .sidebar .divider {
+                    height: 1px;
+                    background: rgba(255,255,255,.1);
+                    margin: 8px 16px;
+                }
+
+                .sidebar .section-title {
+                    color: #8899bb;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    padding: 12px 18px 4px;
+                    letter-spacing: 1px;
+                }
+
+            .content {
+                margin-left: 230px;
+            }
+
+            .topbar {
+                background: #fff;
+                border-bottom: 1px solid #e3e6ec;
+                padding: 10px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .main {
+                padding: 24px;
+                min-height: 80vh;
+            }
+
+            .menu-toggle {
+                display: none;
+                background: none;
+                border: none;
+                font-size: 24px;
+                color: var(--azul);
+                cursor: pointer;
+            }
+
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .user-avatar {
+                font-size: 28px;
+                color: var(--azul);
+            }
+
+            .user-name {
+                font-weight: 500;
+                font-size: 14px;
+                color: #333;
+            }
+
+            .user-role {
+                font-size: 12px;
+                color: #6c757d;
+            }
+
+            .token-status {
+                font-size: 12px;
+            }
+
+            @@media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s;
+                }
+
+                    .sidebar.open {
+                        transform: translateX(0);
+                    }
+
+                .content {
+                    margin-left: 0;
+                }
+
+                .menu-toggle {
+                    display: block;
+                }
+            }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="brand"><i class="bi bi-person-badge"></i> Carnet Digital</div>
+        <nav>
+            <div class="section-title">Módulos</div>
+            <a href="/EstadoUsuario"><i class="bi bi-toggle2-on"></i> Cambio de Estado</a>
+            <a href="/Qr"><i class="bi bi-qr-code"></i> Código QR</a>
+            <a href="/Fotografia"><i class="bi bi-image"></i> Fotografía</a>
+            <a href="/Parametro"><i class="bi bi-sliders"></i> Parámetros</a>
+
+            <div class="divider"></div>
+            <div class="section-title">Microservicios</div>
+            <a href="#" onclick="abrirMicroservicio('https://localhost:7206/Usuarios'); return false;"><i class="bi bi-people"></i> Usuarios</a>
+            <a href="#" onclick="abrirMicroservicio('https://localhost:7020/TiposUsuario'); return false;"><i class="bi bi-tags"></i> Tipos de Usuario</a>
+            <a href="#" onclick="abrirMicroservicio('https://localhost:7021/TiposIdentificacion'); return false;"><i class="bi bi-id-card"></i> Tipos de Identificación</a>
+            <a href="#" onclick="abrirMicroservicio('http://localhost:5280/Carreras'); return false;"><i class="bi bi-mortarboard"></i> Carreras</a>
+            <a href="#" onclick="abrirMicroservicio('http://localhost:5202/Areas'); return false;"><i class="bi bi-building"></i> Áreas</a>
+            <a href="#" onclick="abrirMicroservicio('http://localhost:7002/Instituciones'); return false;"><i class="bi bi-university"></i> Instituciones</a>
+
+            <div class="divider"></div>
+            <a href="#" onclick="cerrarSesion(); return false;" class="logout-link">
+                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+            </a>
+        </nav>
+    </div>
+
+    <div class="content">
+        <div class="topbar">
+            <div class="d-flex align-items-center gap-2">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="mb-0">@ViewData["Title"]</h5>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="bi bi-person-circle"></i></div>
+                    <span class="user-name" id="userName">Usuario</span>
+                    <span class="user-role" id="userRole"></span>
+                </div>
+                <span class="badge bg-success token-status" id="tokenBadge">✅ Con sesión</span>
+            </div>
+        </div>
+
+        <div class="main">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Obtener token de la sesión (desde el servidor)
+        var tokenElement = document.getElementById('tokenBadge');
+        var userNameElement = document.getElementById('userName');
+        var userRoleElement = document.getElementById('userRole');
+
+        // Verificar si hay token en localStorage (para microservicios)
+        var token = localStorage.getItem('accessToken');
+        if (token) {
+        var nombre = localStorage.getItem('nombreCompleto') || 'Usuario';
+        var tipo = localStorage.getItem('usuarioTipo') || '';
+        userNameElement.textContent = nombre;
+        userRoleElement.textContent = tipo ? '(' + tipo + ')' : '';
+        tokenBadge.textContent = '✅ Con sesión';
+        tokenBadge.className = 'badge bg-success token-status';
+        } else {
+        // Si no hay token en localStorage, intentar obtener de la sesión
+        // (El token se pasa desde LoginSRV1)
+        var urlParams = new URLSearchParams(window.location.search);
+        var tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+        localStorage.setItem('accessToken', tokenFromUrl);
+        // Limpiar URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        location.reload();
+        }
+        }
+        });
+
+        function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function cerrarSesion() {
+        if (confirm('¿Está seguro de cerrar sesión?')) {
+        localStorage.clear();
+        window.location.href = 'https://localhost:7019/Login';
+        }
+        }
+
+        function abrirMicroservicio(url) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+        window.location.href = 'https://localhost:7019/Login';
+        return;
+        }
+        // Abrir en la misma pestaña con el token en la URL
+        window.location.href = url + '?token=' + encodeURIComponent(token);
+        }
+
+        // Cerrar sidebar en móvil
+        document.addEventListener('click', function(event) {
+        var sidebar = document.getElementById('sidebar');
+        var toggleBtn = document.querySelector('.menu-toggle');
+        if (window.innerWidth <= 768) {
+        if (!sidebar.contains(event.target) && !toggleBtn.contains(event.target)) {
+        sidebar.classList.remove('open');
+        }
+        }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

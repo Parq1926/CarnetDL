@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "SRV13_Fotografia": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:60311;http://localhost:60312"
+    }
+  }
+}

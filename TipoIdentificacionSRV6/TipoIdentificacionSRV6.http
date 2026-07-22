@@ -1,0 +1,6 @@
+@TipoIdentificacionSRV6_HostAddress = http://localhost:5231
+
+GET {{TipoIdentificacionSRV6_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

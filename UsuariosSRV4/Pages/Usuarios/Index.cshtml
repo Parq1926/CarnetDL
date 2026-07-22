@@ -1,0 +1,1243 @@
+﻿@page
+@model UsuariosSRV4.Pages.Usuarios.IndexModel
+@{
+    ViewData["Title"] = "Administracion de Usuarios";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/siteusuarios.css" />
+
+<div class="page-header">
+    <h2><i class="fas fa-users"></i> Lista de Usuarios</h2>
+    <div>
+        <button class="btn btn-primary" onclick="abrirModalCrear()">
+            <i class="fas fa-plus"></i> Nuevo Usuario
+        </button>
+        <button class="btn btn-info" onclick="abrirModalBuscar()">
+            <i class="fas fa-search"></i> Buscar por ID
+        </button>
+    </div>
+</div>
+
+<div id="alertas"></div>
+
+<div id="loading" class="loading" style="display:none;">
+    <div class="spinner-border"></div>
+    <p class="mt-2">Cargando usuarios...</p>
+</div>
+
+<div id="listaUsuarios" class="usuario-grid"></div>
+
+<!-- ======================================== -->
+<!-- MODAL BUSCAR POR ID -->
+<!-- ======================================== -->
+<div class="modal" id="modalBuscar">
+    <div class="modal-dialog" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#17a2b8;">
+                <h5 class="modal-title">Buscar Usuario por ID</h5>
+                <button class="btn-close" onclick="cerrarModalBuscar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Ingrese el ID del usuario</label>
+                    <input id="buscarId" type="number" class="form-control" placeholder="Ej: 1, 2, 3..." min="1">
+                </div>
+                <div id="buscarResultado" style="margin-top:15px; display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalBuscar()">Cancelar</button>
+                <button class="btn btn-info" onclick="buscarUsuarioPorId()">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL CREAR / EDITAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalFormulario">
+    <div class="modal-dialog" style="max-width:750px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModal">Nuevo Usuario</h5>
+                <button class="btn-close" onclick="cerrarModalFormulario()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="idUsuario" value="0">
+
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input id="email" class="form-control" placeholder="ejemplo@cuc.ac.cr">
+                    <small style="color: #6c757d; font-size: 12px;">Solo @@cuc.ac.cr o @@cuc.cr</small>
+                    <div class="invalid-feedback" id="errEmail"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña <span id="contrasenaRequerido">*</span></label>
+                    <input id="contrasena" type="password" class="form-control" placeholder="Mínimo 6 caracteres">
+                    <div class="invalid-feedback" id="errContrasena"></div>
+                    <small style="color: #6c757d; font-size: 12px;" id="contrasenaAyuda">Requerida para nuevos usuarios. Dejar en blanco para mantener la actual (en edición).</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Identificacion *</label>
+                    <select id="tipoIdentificacionId" class="form-control">
+                        <option value="">Seleccione...</option>
+                    </select>
+                    <div class="invalid-feedback" id="errTipoIdentificacionId"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Numero de Identificacion *</label>
+                    <input id="numeroIdentificacion" class="form-control" placeholder="Numero de identificacion">
+                    <div class="invalid-feedback" id="errNumeroIdentificacion"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre Completo *</label>
+                    <input id="nombreCompleto" class="form-control" placeholder="Nombre completo">
+                    <div class="invalid-feedback" id="errNombreCompleto"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col">
+                        <label>Tipo de Usuario *</label>
+                        <select id="tipoUsuarioId" class="form-control" onchange="toggleCamposSegunTipo()">
+                            <option value="">Seleccione...</option>
+                        </select>
+                        <div class="invalid-feedback" id="errTipoUsuarioId"></div>
+                    </div>
+                    <div class="form-group col">
+                        <label>Activo</label>
+                        <select id="activo" class="form-control">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Telefonos -->
+                <div class="form-group">
+                    <label>Telefonos (opcional)</label>
+                    <div id="telefonosContainer">
+                        <div class="input-group" style="margin-bottom:5px;">
+                            <input type="text" class="form-control telefono-input" placeholder="Ej: 8888-8888">
+                            <button class="btn btn-danger btn-sm" onclick="eliminarTelefono(this)">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" onclick="agregarTelefono()">
+                        <i class="fas fa-plus"></i> Agregar Telefono
+                    </button>
+                </div>
+
+                <!-- Carreras (solo para estudiantes) -->
+                <div class="form-group" id="carrerasContainer" style="display:none;">
+                    <label>Carreras Asociadas</label>
+                    <select id="carrerasIds" class="form-control" multiple style="min-height:120px;">
+                    </select>
+                    <small style="color: #6c757d; font-size: 12px;">Mantenga presionado Ctrl para seleccionar múltiples</small>
+                </div>
+
+                <!-- Áreas (solo para funcionarios) -->
+                <div class="form-group" id="areasContainer" style="display:none;">
+                    <label>Áreas Asociadas</label>
+                    <select id="areasIds" class="form-control" multiple style="min-height:120px;">
+                    </select>
+                    <small style="color: #6c757d; font-size: 12px;">Mantenga presionado Ctrl para seleccionar múltiples</small>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalFormulario()">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarUsuario()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL ELIMINAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalEliminar">
+    <div class="modal-dialog" style="max-width:500px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#dc3545;">
+                <h5 class="modal-title">Confirmar Eliminacion</h5>
+                <button class="btn-close" onclick="cerrarModalEliminar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Esta seguro de eliminar al usuario <strong id="nombreEliminar"></strong>?</p>
+                <p style="color: #6c757d; font-size: 14px;">Esta accion no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalEliminar()">Cancelar</button>
+                <button class="btn btn-danger" onclick="eliminarUsuario()">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========================================
+    // 🔐 VERIFICAR TOKEN EN LOCALSTORAGE
+    // ========================================
+    // ========================================
+// 🔐 VERIFICAR TOKEN EN LOCALSTORAGE
+// ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedToken = localStorage.getItem('accessToken');
+        console.log('=== USUARIOS SRV4 ===');
+        console.log('Token en localStorage:', storedToken ? 'SÍ existe' : 'NO existe');
+
+        if (!storedToken) {
+            console.log('❌ No hay token, redirigiendo a Login');
+            localStorage.setItem('redirectMessage', 'Por favor inicie sesión para utilizar el sistema');
+            // ✅ USAR URL RELATIVA
+            window.location.href = '/Login';
+            return;
+        }
+
+        console.log('✅ Token válido, cargando datos...');
+        cargarUsuarios();
+        cargarAreas();
+        cargarTiposIdentificacion();
+        cargarCarreras();
+        cargarTiposUsuario();
+    });
+
+    // ========================================
+    // CONFIGURACIÓN
+    // ========================================
+    const API_URL = '/api/Usuarios';
+    let idEliminar = 0;
+
+    // ========================================
+    // 🔐 FUNCIONES PARA OBTENER TOKEN
+    // ========================================
+
+    function getToken() {
+        return localStorage.getItem('accessToken');
+    }
+
+    function getHeaders() {
+        const token = getToken();
+        if (!token) {
+            mostrarAlerta('No hay sesión activa. Redirigiendo...', 'warning');
+            setTimeout(function() {
+                window.location.href = 'https://localhost:7019/Login';
+            }, 1500);
+            return null;
+        }
+        return {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+    }
+
+        // ========================================
+    // 🔐 FUNCIÓN PARA VERIFICAR Y REDIRIGIR SI 401
+    // ========================================
+
+    function handleUnauthorized(response) {
+        if (response.status === 401) {
+            console.log('❌ Token inválido o expirado, redirigiendo a Login');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('nombreCompleto');
+            localStorage.removeItem('usuarioTipo');
+            localStorage.removeItem('usuarioId');
+            localStorage.setItem('redirectMessage', 'Su sesión ha expirado. Por favor inicie sesión nuevamente.');
+            // ✅ USAR URL RELATIVA
+            window.location.href = '/Login';
+            return true;
+        }
+        return false;
+    }
+
+    // ========================================
+    // ALERTAS Y LOADING
+    // ========================================
+
+    function mostrarAlerta(mensaje, tipo) {
+        const div = document.getElementById('alertas');
+        div.innerHTML = `
+            <div class="alert alert-${tipo} alert-dismissible">
+                ${mensaje}
+                <button onclick="this.parentElement.remove()" style="float:right; background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+        `;
+        setTimeout(() => { div.innerHTML = ''; }, 4000);
+    }
+
+    function mostrarLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    // ========================================
+    // FUNCIONES DE MODALES
+    // ========================================
+
+    function abrirModalCrear() {
+        document.getElementById('tituloModal').textContent = 'Nuevo Usuario';
+        document.getElementById('idUsuario').value = '0';
+        limpiarFormulario();
+        limpiarErrores();
+        document.getElementById('modalFormulario').style.display = 'flex';
+        setTimeout(function() {
+            toggleCamposSegunTipo();
+        }, 200);
+    }
+
+    function cerrarModalFormulario() {
+        document.getElementById('modalFormulario').style.display = 'none';
+        limpiarErrores();
+    }
+
+    function abrirModalBuscar() {
+        document.getElementById('buscarId').value = '';
+        document.getElementById('buscarResultado').style.display = 'none';
+        document.getElementById('buscarResultado').innerHTML = '';
+        document.getElementById('modalBuscar').style.display = 'flex';
+    }
+
+    function cerrarModalBuscar() {
+        document.getElementById('modalBuscar').style.display = 'none';
+    }
+
+    function abrirModalEliminar(id, nombre) {
+        idEliminar = id;
+        document.getElementById('nombreEliminar').textContent = nombre;
+        document.getElementById('modalEliminar').style.display = 'flex';
+    }
+
+    function cerrarModalEliminar() {
+        document.getElementById('modalEliminar').style.display = 'none';
+    }
+
+    // ========================================
+    // TOGGLE CAMPOS SEGÚN TIPO DE USUARIO
+    // ========================================
+
+    function toggleCamposSegunTipo() {
+        const tipoUsuarioId = parseInt(document.getElementById('tipoUsuarioId').value);
+        const carrerasContainer = document.getElementById('carrerasContainer');
+        const areasContainer = document.getElementById('areasContainer');
+
+        carrerasContainer.style.display = 'none';
+        areasContainer.style.display = 'none';
+
+        if (!tipoUsuarioId || isNaN(tipoUsuarioId)) return;
+
+        if (tipoUsuarioId === 1) {
+            carrerasContainer.style.display = 'block';
+        } else if (tipoUsuarioId === 2) {
+            areasContainer.style.display = 'block';
+        }
+    }
+
+    // ========================================
+    // CARGAR DATOS DESDE OTROS MICROSERVICIOS
+    // ========================================
+
+    async function cargarAreas() {
+        try {
+            const headers = getHeaders();
+            if (!headers) return;
+
+            const response = await fetch('/api/Areas', { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                const areas = await response.json();
+                const select = document.getElementById('areasIds');
+                select.innerHTML = '<option value="">Seleccione áreas...</option>';
+                areas.forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area.id;
+                    option.textContent = area.nombre;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar áreas:', error);
+        }
+    }
+
+    async function cargarTiposIdentificacion() {
+        try {
+            const headers = getHeaders();
+            if (!headers) return;
+
+            const response = await fetch('/api/TipoIdentificacion', { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                const tipos = await response.json();
+                const select = document.getElementById('tipoIdentificacionId');
+                select.innerHTML = '<option value="">Seleccione...</option>';
+                tipos.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo.id;
+                    option.textContent = tipo.nombre;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar tipos de identificación:', error);
+        }
+    }
+
+    async function cargarCarreras() {
+        try {
+            const headers = getHeaders();
+            if (!headers) return;
+
+            const response = await fetch('/api/carreras', { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                const carreras = await response.json();
+                const select = document.getElementById('carrerasIds');
+                select.innerHTML = '<option value="">Seleccione carreras...</option>';
+                carreras.forEach(carrera => {
+                    const option = document.createElement('option');
+                    option.value = carrera.id;
+                    option.textContent = carrera.nombre;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar carreras:', error);
+        }
+    }
+
+    async function cargarTiposUsuario() {
+        try {
+            const headers = getHeaders();
+            if (!headers) return;
+
+            const response = await fetch('/api/TipoUsuario', { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                const tipos = await response.json();
+                const select = document.getElementById('tipoUsuarioId');
+                select.innerHTML = '<option value="">Seleccione...</option>';
+                tipos.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo.Id || tipo.id;
+                    option.textContent = tipo.Nombre || tipo.nombre;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar tipos de usuario:', error);
+        }
+    }
+
+    // ========================================
+    // LIMPIAR FORMULARIO
+    // ========================================
+
+    function limpiarFormulario() {
+        document.getElementById('email').value = '';
+        document.getElementById('contrasena').value = '';
+        document.getElementById('tipoIdentificacionId').value = '';
+        document.getElementById('numeroIdentificacion').value = '';
+        document.getElementById('nombreCompleto').value = '';
+        document.getElementById('tipoUsuarioId').value = '';
+        document.getElementById('activo').value = 'true';
+
+        const telContainer = document.getElementById('telefonosContainer');
+        telContainer.innerHTML = '<div class="input-group" style="margin-bottom:5px;"><input type="text" class="form-control telefono-input" placeholder="Ej: 8888-8888"><button class="btn btn-danger btn-sm" onclick="eliminarTelefono(this)">✕</button></div>';
+
+        document.getElementById('carrerasContainer').style.display = 'none';
+        document.getElementById('areasContainer').style.display = 'none';
+    }
+
+    // ========================================
+    // VALIDACIONES
+    // ========================================
+
+    function limpiarErrores() {
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    }
+
+    function mostrarError(campo, mensaje) {
+        const el = document.getElementById(campo);
+        const err = document.getElementById('err' + campo.charAt(0).toUpperCase() + campo.slice(1));
+        el.classList.add('is-invalid');
+        err.textContent = mensaje;
+    }
+
+    function validarFormulario() {
+        let valido = true;
+        limpiarErrores();
+
+        const id = document.getElementById('idUsuario').value;
+        const isEdit = id !== '0';
+
+        const email = document.getElementById('email').value.trim();
+        const contrasena = document.getElementById('contrasena').value.trim();
+        const tipoIdentificacionId = document.getElementById('tipoIdentificacionId').value;
+        const numeroIdentificacion = document.getElementById('numeroIdentificacion').value.trim();
+        const nombreCompleto = document.getElementById('nombreCompleto').value.trim();
+        const tipoUsuarioId = document.getElementById('tipoUsuarioId').value;
+
+        if (!email) {
+            mostrarError('email', 'El email es requerido');
+            valido = false;
+        } else {
+            const emailRegex = /^[^\s@@]+@@(cuc\.ac\.cr|cuc\.cr)$/;
+            if (!emailRegex.test(email)) {
+                mostrarError('email', 'Solo se permiten @@cuc.ac.cr o @@cuc.cr');
+                valido = false;
+            }
+        }
+
+        if (!isEdit && !contrasena) {
+            mostrarError('contrasena', 'La contraseña es requerida para nuevos usuarios');
+            valido = false;
+        } else if (contrasena && contrasena.length < 6) {
+            mostrarError('contrasena', 'La contraseña debe tener al menos 6 caracteres');
+            valido = false;
+        }
+
+        if (!tipoIdentificacionId) {
+            mostrarError('tipoIdentificacionId', 'Seleccione un tipo de identificación');
+            valido = false;
+        }
+
+        if (!numeroIdentificacion) {
+            mostrarError('numeroIdentificacion', 'El número de identificación es requerido');
+            valido = false;
+        } else if (numeroIdentificacion.length < 5) {
+            mostrarError('numeroIdentificacion', 'El número debe tener al menos 5 caracteres');
+            valido = false;
+        }
+
+        if (!nombreCompleto) {
+            mostrarError('nombreCompleto', 'El nombre completo es requerido');
+            valido = false;
+        } else if (nombreCompleto.length < 3) {
+            mostrarError('nombreCompleto', 'El nombre debe tener al menos 3 caracteres');
+            valido = false;
+        }
+
+        if (!tipoUsuarioId) {
+            mostrarError('tipoUsuarioId', 'Seleccione un tipo de usuario');
+            valido = false;
+        }
+
+        return valido;
+    }
+
+    function obtenerDatosFormulario() {
+        const id = document.getElementById('idUsuario').value;
+        const isEdit = id !== '0';
+        const contrasena = document.getElementById('contrasena').value.trim();
+
+        const telefonos = [];
+        document.querySelectorAll('.telefono-input').forEach(function(input) {
+            if (input.value.trim()) {
+                telefonos.push(input.value.trim());
+            }
+        });
+
+        const selectCarreras = document.getElementById('carrerasIds');
+        const carrerasIds = selectCarreras ? Array.from(selectCarreras.selectedOptions).map(o => parseInt(o.value)) : [];
+
+        const selectAreas = document.getElementById('areasIds');
+        const areasIds = selectAreas ? Array.from(selectAreas.selectedOptions).map(o => parseInt(o.value)) : [];
+
+        const data = {
+            email: document.getElementById('email').value.trim(),
+            tipoIdentificacionId: parseInt(document.getElementById('tipoIdentificacionId').value),
+            numeroIdentificacion: document.getElementById('numeroIdentificacion').value.trim(),
+            nombreCompleto: document.getElementById('nombreCompleto').value.trim(),
+            tipoUsuarioId: parseInt(document.getElementById('tipoUsuarioId').value),
+            telefonos: telefonos,
+            carrerasIds: carrerasIds,
+            areasIds: areasIds
+        };
+
+        if (isEdit) {
+            data.id = parseInt(id);
+            data.activo = document.getElementById('activo').value === 'true';
+            if (contrasena) {
+                data.contrasena = contrasena;
+            }
+        } else {
+            data.contrasena = contrasena;
+        }
+
+        return data;
+    }
+
+    // ========================================
+    // BUSCAR POR ID
+    // ========================================
+
+    async function buscarUsuarioPorId() {
+        const id = document.getElementById('buscarId').value.trim();
+        if (!id || parseInt(id) <= 0) {
+            mostrarAlerta('Ingrese un ID valido mayor a 0', 'warning');
+            return;
+        }
+
+        const headers = getHeaders();
+        if (!headers) return;
+
+        const resultadoDiv = document.getElementById('buscarResultado');
+        resultadoDiv.style.display = 'block';
+        resultadoDiv.innerHTML = '<div class="loading"><div class="spinner-border"></div><p>Buscando...</p></div>';
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.status === 404) {
+                resultadoDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> No se encontro ningun usuario con ID ${id}
+                    </div>
+                `;
+                return;
+            }
+
+            if (!response.ok) throw new Error('Error al buscar');
+
+            const u = await response.json();
+
+            const telefonos = u.telefonos && u.telefonos.length > 0 ? u.telefonos.join(', ') : 'Ninguno';
+
+            resultadoDiv.innerHTML = `
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #dee2e6;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:14px;">
+                        <div><strong>ID:</strong> ${u.id}</div>
+                        <div><strong>Email:</strong> ${u.email}</div>
+                        <div><strong>Nombre:</strong> ${u.nombreCompleto}</div>
+                        <div><strong>Identificacion:</strong> ${u.numeroIdentificacion}</div>
+                        <div><strong>Tipo:</strong> ${u.tipoUsuario}</div>
+                        <div><strong>Telefonos:</strong> ${telefonos}</div>
+                        <div><strong>Estado:</strong> <span class="${u.activo ? 'badge-success' : 'badge-danger'}">${u.activo ? 'Activo' : 'Inactivo'}</span></div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:8px;">
+                        <button class="btn btn-warning btn-sm" onclick="editarUsuario(${u.id})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="abrirModalEliminar(${u.id}, '${u.nombreCompleto}')">Eliminar</button>
+                        <button class="btn btn-secondary btn-sm" onclick="cerrarModalBuscar()">Cerrar</button>
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            resultadoDiv.innerHTML = `<div class="alert alert-danger">Error al buscar: ${error.message}</div>`;
+        }
+    }
+
+    // ========================================
+    // CRUD - LISTAR TODOS
+    // ========================================
+
+    function renderizarUsuarios(usuarios) {
+        const container = document.getElementById('listaUsuarios');
+
+        if (!usuarios || usuarios.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users fa-4x"></i>
+                    <p>No hay usuarios registrados</p>
+                    <button class="btn btn-primary" onclick="abrirModalCrear()">
+                        <i class="fas fa-plus"></i> Crear primer usuario
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        usuarios.forEach(function(u) {
+            const telefonos = u.telefonos && u.telefonos.length > 0 ? u.telefonos.join(', ') : 'Ninguno';
+
+            html += `
+                <div class="usuario-card">
+                    <div class="usuario-card-header">
+                        <h3>${u.nombreCompleto}</h3>
+                        <span class="${u.activo ? 'badge-success' : 'badge-danger'}">${u.activo ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                    <div class="usuario-card-body">
+                        <div class="info-row">
+                            <span class="label"><i class="fas fa-envelope"></i> Email:</span>
+                            <span class="value">${u.email}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label"><i class="fas fa-id-card"></i> Identificacion:</span>
+                            <span class="value">${u.numeroIdentificacion}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label"><i class="fas fa-user-tag"></i> Tipo:</span>
+                            <span class="value">${u.tipoUsuario}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label"><i class="fas fa-phone"></i> Telefonos:</span>
+                            <span class="value">${telefonos}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label"><i class="fas fa-calendar"></i> Creacion:</span>
+                            <span class="value">${new Date(u.fechaCreacion).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="usuario-card-footer">
+                        <button class="btn-sm btn-info" onclick="editarUsuario(${u.id})">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn-sm btn-danger" onclick="abrirModalEliminar(${u.id}, '${u.nombreCompleto}')">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    async function cargarUsuarios() {
+        const headers = getHeaders();
+        if (!headers) return;
+
+        try {
+            mostrarLoading(true);
+            const response = await fetch(API_URL, { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (!response.ok) {
+                throw new Error('Error al cargar: ' + response.status);
+            }
+
+            const data = await response.json();
+            renderizarUsuarios(data);
+        } catch (error) {
+            document.getElementById('listaUsuarios').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> Error al cargar usuarios: ${error.message}
+                </div>
+            `;
+        } finally {
+            mostrarLoading(false);
+        }
+    }
+
+    // ========================================
+    // CRUD - CREAR / EDITAR
+    // ========================================
+
+    async function guardarUsuario() {
+        if (!validarFormulario()) return;
+
+        const headers = getHeaders();
+        if (!headers) return;
+
+        const id = document.getElementById('idUsuario').value;
+        const data = obtenerDatosFormulario();
+        const isEdit = id !== '0';
+        const url = isEdit ? `${API_URL}/${id}` : API_URL;
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: JSON.stringify(data)
+            });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                mostrarAlerta(isEdit ? 'Usuario actualizado' : 'Usuario creado', 'success');
+                cerrarModalFormulario();
+                cargarUsuarios();
+                cerrarModalBuscar();
+            } else {
+                const error = await response.json();
+                mostrarAlerta(error.error || 'Error al guardar', 'danger');
+            }
+        } catch (error) {
+            mostrarAlerta('Error de conexion: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // CRUD - EDITAR (OBTENER POR ID)
+    // ========================================
+
+    async function editarUsuario(id) {
+        const headers = getHeaders();
+        if (!headers) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (!response.ok) throw new Error('Error al obtener datos');
+            const u = await response.json();
+
+            document.getElementById('tituloModal').textContent = 'Editar Usuario';
+            document.getElementById('idUsuario').value = u.id;
+            document.getElementById('email').value = u.email;
+            document.getElementById('contrasena').value = '';
+            document.getElementById('tipoIdentificacionId').value = u.tipoIdentificacionId || '';
+            document.getElementById('numeroIdentificacion').value = u.numeroIdentificacion;
+            document.getElementById('nombreCompleto').value = u.nombreCompleto;
+            document.getElementById('tipoUsuarioId').value = u.tipoUsuarioId || '';
+            document.getElementById('activo').value = u.activo ? 'true' : 'false';
+
+            const telContainer = document.getElementById('telefonosContainer');
+            telContainer.innerHTML = '';
+            if (u.telefonos && u.telefonos.length > 0) {
+                u.telefonos.forEach(function(tel) {
+                    const div = document.createElement('div');
+                    div.className = 'input-group';
+                    div.style.marginBottom = '5px';
+                    div.innerHTML = `<input type="text" class="form-control telefono-input" value="${tel}" placeholder="Ej: 8888-8888"><button class="btn btn-danger btn-sm" onclick="eliminarTelefono(this)">✕</button>`;
+                    telContainer.appendChild(div);
+                });
+            } else {
+                telContainer.innerHTML = '<div class="input-group" style="margin-bottom:5px;"><input type="text" class="form-control telefono-input" placeholder="Ej: 8888-8888"><button class="btn btn-danger btn-sm" onclick="eliminarTelefono(this)">✕</button></div>';
+            }
+
+            const selectCarreras = document.getElementById('carrerasIds');
+            if (u.carrerasIds && u.carrerasIds.length > 0) {
+                Array.from(selectCarreras.options).forEach(option => {
+                    if (u.carrerasIds.includes(parseInt(option.value))) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            const selectAreas = document.getElementById('areasIds');
+            if (u.areasIds && u.areasIds.length > 0) {
+                Array.from(selectAreas.options).forEach(option => {
+                    if (u.areasIds.includes(parseInt(option.value))) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            setTimeout(function() {
+                toggleCamposSegunTipo();
+            }, 200);
+
+            limpiarErrores();
+            document.getElementById('modalFormulario').style.display = 'flex';
+        } catch (error) {
+            mostrarAlerta('Error al cargar datos: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // CRUD - ELIMINAR
+    // ========================================
+
+    async function eliminarUsuario() {
+        const headers = getHeaders();
+        if (!headers) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${idEliminar}`, {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                cerrarModalEliminar();
+                mostrarAlerta('Usuario eliminado correctamente', 'success');
+                cargarUsuarios();
+                cerrarModalBuscar();
+            } else {
+                const error = await response.json();
+                mostrarAlerta(error.error || 'Error al eliminar', 'danger');
+            }
+        } catch (error) {
+            mostrarAlerta('Error de conexion: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // TELEFONOS
+    // ========================================
+
+    function agregarTelefono() {
+        const container = document.getElementById('telefonosContainer');
+        const div = document.createElement('div');
+        div.className = 'input-group';
+        div.style.marginBottom = '5px';
+        div.innerHTML = '<input type="text" class="form-control telefono-input" placeholder="Ej: 8888-8888"><button class="btn btn-danger btn-sm" onclick="eliminarTelefono(this)">✕</button>';
+        container.appendChild(div);
+    }
+
+    function eliminarTelefono(btn) {
+        const container = document.getElementById('telefonosContainer');
+        if (container.children.length > 1) {
+            btn.parentElement.remove();
+        }
+    }
+</script>
+
+<style>
+    .usuario-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .usuario-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+        .usuario-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+    .usuario-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .usuario-card-header h3 {
+            color: #003366;
+            font-size: 16px;
+            margin: 0;
+        }
+
+    .usuario-card-body .info-row {
+        display: flex;
+        padding: 4px 0;
+        font-size: 13px;
+    }
+
+        .usuario-card-body .info-row .label {
+            color: #6c757d;
+            min-width: 100px;
+        }
+
+        .usuario-card-body .info-row .value {
+            color: #333;
+            word-break: break-all;
+        }
+
+    .usuario-card-footer {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .badge-success {
+        background: #d4edda;
+        color: #155724;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    .btn-sm {
+        padding: 4px 12px;
+        font-size: 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+    .btn-info {
+        background: #17a2b8;
+        color: white;
+    }
+
+        .btn-info:hover {
+            background: #117a8b;
+        }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+        .btn-danger:hover {
+            background: #bd2130;
+        }
+
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+    }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+    .btn-primary {
+        background: #003366;
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background: #001a33;
+        }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+        .form-control:focus {
+            border-color: #003366;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 13px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-dialog {
+        max-width: 750px;
+        margin: auto;
+        width: 90%;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        background: #003366;
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-header .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+        }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+    }
+
+        .empty-state i {
+            color: #dee2e6;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            color: #6c757d;
+        }
+
+    .loading {
+        text-align: center;
+        padding: 40px 0;
+    }
+
+    .spinner-border {
+        display: inline-block;
+        width: 3rem;
+        height: 3rem;
+        border: 0.25em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner-border 0.75s linear infinite;
+        color: #003366;
+    }
+
+    @@keyframes spinner-border {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+        .page-header h2 {
+            color: #003366;
+            margin: 0;
+            font-size: 24px;
+        }
+
+    .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+        .input-group .form-control {
+            flex: 1;
+        }
+
+    select[multiple] {
+        min-height: 120px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+        .form-row .col {
+            display: flex;
+            flex-direction: column;
+        }
+</style>
