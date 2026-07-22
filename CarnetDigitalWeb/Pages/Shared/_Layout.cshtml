@@ -139,10 +139,6 @@
                 color: #6c757d;
             }
 
-            .token-status {
-                font-size: 12px;
-            }
-
             @@media (max-width: 768px) {
                 .sidebar {
                     transform: translateX(-100%);
@@ -167,21 +163,56 @@
     <div class="sidebar" id="sidebar">
         <div class="brand"><i class="bi bi-person-badge"></i> Carnet Digital</div>
         <nav>
+            <!-- ======================================== -->
+            <!-- SECCIÓN: MÓDULOS INTERNOS                -->
+            <!-- ======================================== -->
             <div class="section-title">Módulos</div>
             <a href="/EstadoUsuario"><i class="bi bi-toggle2-on"></i> Cambio de Estado</a>
             <a href="/Qr"><i class="bi bi-qr-code"></i> Código QR</a>
             <a href="/Fotografia"><i class="bi bi-image"></i> Fotografía</a>
             <a href="/Parametro"><i class="bi bi-sliders"></i> Parámetros</a>
+            <a href="/TiposIdentificacion"><i class="bi bi-id-card"></i> Tipos de Identificación</a>
+            <a href="/TiposUsuario"><i class="bi bi-id-card"></i> Tipos de Usuario</a>
 
+            <!-- ======================================== -->
+            <!-- SECCIÓN: MICROSERVICIOS                  -->
+            <!-- ======================================== -->
             <div class="divider"></div>
             <div class="section-title">Microservicios</div>
-            <a href="#" onclick="abrirMicroservicio('https://localhost:7206/Usuarios'); return false;"><i class="bi bi-people"></i> Usuarios</a>
-            <a href="#" onclick="abrirMicroservicio('https://localhost:7020/TiposUsuario'); return false;"><i class="bi bi-tags"></i> Tipos de Usuario</a>
-            <a href="#" onclick="abrirMicroservicio('https://localhost:7021/TiposIdentificacion'); return false;"><i class="bi bi-id-card"></i> Tipos de Identificación</a>
-            <a href="#" onclick="abrirMicroservicio('http://localhost:5280/Carreras'); return false;"><i class="bi bi-mortarboard"></i> Carreras</a>
-            <a href="#" onclick="abrirMicroservicio('http://localhost:5202/Areas'); return false;"><i class="bi bi-building"></i> Áreas</a>
-            <a href="#" onclick="abrirMicroservicio('http://localhost:7002/Instituciones'); return false;"><i class="bi bi-university"></i> Instituciones</a>
 
+            <!-- Usuarios -->
+            <a href="#" onclick="abrirMicroservicio('https://localhost:7206/Usuarios'); return false;">
+                <i class="bi bi-people"></i> Usuarios
+            </a>
+
+            <!-- Tipos de Usuario -->
+            <a href="/TiposUsuario">
+                <i class="bi bi-tags"></i> Tipos de Usuario
+            </a>
+
+            <!-- Tipos de Identificación -->
+            <a href="/TiposIdentificacion">
+                <i class="bi bi-id-card"></i> Tipos de Identificación
+            </a>
+
+            <!-- Carreras -->
+            <a href="#" onclick="abrirMicroservicio('http://localhost:5280/Carreras'); return false;">
+                <i class="bi bi-mortarboard"></i> Carreras
+            </a>
+
+            <!-- Áreas -->
+            <a href="#" onclick="abrirMicroservicio('http://localhost:5202/Areas'); return false;">
+                <i class="bi bi-building"></i> Áreas
+            </a>
+
+            <!-- Instituciones -->
+            <a href="#" onclick="abrirMicroservicio('http://localhost:7002/Instituciones'); return false;">
+                <i class="bi bi-university"></i> Instituciones
+            </a>
+
+            <!-- ======================================== -->
+            <!-- SECCIÓN: CERRAR SESIÓN                   -->
+            <!-- ======================================== -->
             <div class="divider"></div>
             <a href="#" onclick="cerrarSesion(); return false;" class="logout-link">
                 <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
@@ -203,7 +234,7 @@
                     <span class="user-name" id="userName">Usuario</span>
                     <span class="user-role" id="userRole"></span>
                 </div>
-                <span class="badge bg-success token-status" id="tokenBadge">✅ Con sesión</span>
+                <span class="badge bg-success" id="tokenBadge">✅ Con sesión</span>
             </div>
         </div>
 
@@ -216,32 +247,34 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        // Obtener token de la sesión (desde el servidor)
-        var tokenElement = document.getElementById('tokenBadge');
-        var userNameElement = document.getElementById('userName');
-        var userRoleElement = document.getElementById('userRole');
-
-        // Verificar si hay token en localStorage (para microservicios)
         var token = localStorage.getItem('accessToken');
-        if (token) {
+        if (!token) {
+        window.location.href = '/Login';
+        return;
+        }
+
         var nombre = localStorage.getItem('nombreCompleto') || 'Usuario';
         var tipo = localStorage.getItem('usuarioTipo') || '';
-        userNameElement.textContent = nombre;
-        userRoleElement.textContent = tipo ? '(' + tipo + ')' : '';
-        tokenBadge.textContent = '✅ Con sesión';
-        tokenBadge.className = 'badge bg-success token-status';
-        } else {
-        // Si no hay token en localStorage, intentar obtener de la sesión
-        // (El token se pasa desde LoginSRV1)
-        var urlParams = new URLSearchParams(window.location.search);
-        var tokenFromUrl = urlParams.get('token');
-        if (tokenFromUrl) {
-        localStorage.setItem('accessToken', tokenFromUrl);
-        // Limpiar URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        location.reload();
-        }
-        }
+        document.getElementById('userName').textContent = nombre;
+        document.getElementById('userRole').textContent = tipo ? '(' + tipo + ')' : '';
+
+        // ✅ Obtener configuración de servicios desde appsettings.json
+        fetch('/api/config')
+        .then(response => response.json())
+        .then(config => {
+        window.serviceConfig = config;
+        })
+        .catch(() => {
+        // Fallback a valores por defecto
+        window.serviceConfig = {
+        'UsuariosSRV4': 'https://localhost:7206',
+        'TiposUsuarioSRV5': 'https://localhost:7020',
+        'TipoIdentificacionSRV6': 'https://localhost:7021',
+        'SRV3_Carreras': 'http://localhost:5280',
+        'SRV4_Areas': 'http://localhost:5202',
+        'SRV2_Instituciones': 'http://localhost:7002'
+        };
+        });
         });
 
         function toggleSidebar() {
@@ -251,18 +284,18 @@
         function cerrarSesion() {
         if (confirm('¿Está seguro de cerrar sesión?')) {
         localStorage.clear();
-        window.location.href = 'https://localhost:7019/Login';
+        window.location.href = '/Login';
         }
         }
 
         function abrirMicroservicio(url) {
         var token = localStorage.getItem('accessToken');
         if (!token) {
-        window.location.href = 'https://localhost:7019/Login';
+        window.location.href = '/Login';
         return;
         }
-        // Abrir en la misma pestaña con el token en la URL
-        window.location.href = url + '?token=' + encodeURIComponent(token);
+        // Abre la página sin token en URL (el microservicio obtendrá el token de localStorage)
+        window.location.href = url;
         }
 
         // Cerrar sidebar en móvil

@@ -13,7 +13,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ✅ HttpClient para LoginSRV1 (API)
+// Configurar HttpClient para LoginSRV1
 var loginUrl = builder.Configuration["Services:LoginSRV1"] ?? "https://localhost:7019";
 
 builder.Services.AddHttpClient("Login", c =>
@@ -23,43 +23,39 @@ builder.Services.AddHttpClient("Login", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// ✅ HttpClient para otros microservicios
-var baseUrl = builder.Configuration["MicroservicioBase"] ?? "https://tiusr22pl.cuc-carrera-ti.ac.cr";
+// Agregar HttpClient para TipoIdentificacionSRV6
+var tipoIdentificacionUrl = builder.Configuration["Services:TipoIdentificacionSRV6"] ?? "https://localhost:7021";
 
-builder.Services.AddHttpClient("EstadoUsuario", c =>
+// HttpClient para TiposUsuarioSRV5
+var tipoUsuarioUrl = builder.Configuration["Services:TiposUsuarioSRV5"] ?? "https://localhost:7020";
+
+builder.Services.AddHttpClient("TipoUsuario", c =>
 {
-    c.BaseAddress = new Uri($"{baseUrl}/EstadoUsuario/");
+    c.BaseAddress = new Uri(tipoUsuarioUrl);
     c.DefaultRequestHeaders.Add("Accept", "application/json");
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
-builder.Services.AddHttpClient("CarnetQR", c =>
+// ✅ Registrar servicio
+builder.Services.AddScoped<ITipoUsuarioService, TipoUsuarioService>();
+
+builder.Services.AddHttpClient("TipoIdentificacion", c =>
 {
-    c.BaseAddress = new Uri($"{baseUrl}/CarnetQR/");
+    c.BaseAddress = new Uri(tipoIdentificacionUrl);
     c.DefaultRequestHeaders.Add("Accept", "application/json");
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
-builder.Services.AddHttpClient("Fotografia", c =>
-{
-    c.BaseAddress = new Uri($"{baseUrl}/Fotografia/");
-    c.DefaultRequestHeaders.Add("Accept", "application/json");
-    c.Timeout = TimeSpan.FromSeconds(30);
-});
+// ✅ Registrar servicio
+builder.Services.AddScoped<ITipoIdentificacionService, TipoIdentificacionService>();
 
-builder.Services.AddHttpClient("Parametro", c =>
-{
-    c.BaseAddress = new Uri($"{baseUrl}/Parametros/");
-    c.DefaultRequestHeaders.Add("Accept", "application/json");
-    c.Timeout = TimeSpan.FromSeconds(30);
-});
-
-// ✅ REGISTRAR TODOS LOS SERVICIOS
+// ✅ Servicios
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IEstadoUsuarioService, EstadoUsuarioService>();
 builder.Services.AddScoped<ICarnetQRService, CarnetQRService>();
 builder.Services.AddScoped<IFotografiaService, FotografiaService>();
 builder.Services.AddScoped<IParametroService, ParametroService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -73,7 +69,6 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 
-// ✅ Endpoint para recibir token desde LoginSRV1
 app.MapGet("/set-token", (HttpContext ctx) =>
 {
     var token = ctx.Request.Query["token"].ToString();
@@ -88,7 +83,6 @@ app.MapGet("/set-token", (HttpContext ctx) =>
     return Results.Redirect(redirectUrl);
 });
 
-// ✅ Endpoint de Login (consume LoginSRV1)
 app.MapPost("/api/login", async (LoginRequest request, ILoginService loginService) =>
 {
     var result = await loginService.LoginAsync(request);
@@ -101,11 +95,30 @@ app.MapPost("/api/logout", (HttpContext ctx) =>
     return Results.Ok(new { success = true, message = "Sesión cerrada" });
 });
 
+// ✅ Endpoint de configuración para el frontend
+app.MapGet("/api/config", (IConfiguration config) =>
+{
+    var services = new Dictionary<string, string>();
+    var servicesSection = config.GetSection("Services");
+
+    foreach (var child in servicesSection.GetChildren())
+    {
+        services[child.Key] = child.Value ?? string.Empty;
+    }
+
+    return Results.Ok(new { Services = services });
+});
+
 app.MapRazorPages();
 
-// ✅ Redirigir raíz a /Login (página de CarnetDigitalWeb)
 app.MapGet("/", async context =>
 {
+    var token = context.Session.GetString("Token");
+    if (!string.IsNullOrEmpty(token))
+    {
+        context.Response.Redirect("/EstadoUsuario");
+        return;
+    }
     context.Response.Redirect("/Login");
     await Task.CompletedTask;
 });

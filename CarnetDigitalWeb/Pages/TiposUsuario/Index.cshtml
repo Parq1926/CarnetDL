@@ -1,0 +1,435 @@
+﻿@page
+@model CarnetDigitalWeb.Pages.TiposUsuario.IndexModel
+@{
+    ViewData["Title"] = "Administracion de Tipos de Usuario";
+}
+
+<div class="card-panel" style="max-width:600px">
+    <h6 class="text-muted mb-3">SRV5 - Tipos de Usuario</h6>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span></span>
+        <button class="btn btn-primary btn-sm" onclick="abrirModalCrear()">
+            <i class="bi bi-plus-circle"></i> Nuevo Tipo
+        </button>
+    </div>
+
+    <div id="alertas"></div>
+
+    <div id="loading" style="display:none; text-align:center; padding:20px;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2">Cargando...</p>
+    </div>
+
+    <div id="listaTiposUsuario">
+        <div class="text-muted text-center py-3">Cargando tipos de usuario...</div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL CREAR / EDITAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalFormulario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloModal">Nuevo Tipo de Usuario</h5>
+                <button type="button" class="btn-close" onclick="cerrarModalFormulario()"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="idTipoUsuario" value="0">
+                <div class="mb-3">
+                    <label class="form-label">Nombre *</label>
+                    <input id="nombre" class="form-control" placeholder="Ej: Estudiante, Funcionario, Administrador">
+                    <div class="invalid-feedback" id="errNombre"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalFormulario()">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarTipoUsuario()">
+                    <i class="bi bi-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL ELIMINAR -->
+<!-- ======================================== -->
+<div class="modal" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" onclick="cerrarModalEliminar()"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de eliminar el tipo de usuario <strong id="nombreEliminar"></strong>?</p>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalEliminar()">Cancelar</button>
+                <button class="btn btn-danger" onclick="eliminarTipoUsuario()">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========================================
+    // 🔐 VERIFICAR TOKEN EN LOCALSTORAGE
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedToken = localStorage.getItem('accessToken');
+        console.log('=== TIPOS USUARIO (CarnetDigitalWeb) ===');
+        console.log('Token en localStorage:', storedToken ? 'SÍ existe' : 'NO existe');
+
+        if (!storedToken) {
+            console.log('⚠️ No hay token, redirigiendo a Login');
+            localStorage.setItem('redirectMessage', 'Por favor inicie sesión para utilizar el sistema');
+            window.location.href = '/Login';
+            return;
+        }
+
+        console.log('✅ Token válido, cargando tipos de usuario...');
+        cargarTiposUsuario();
+    });
+
+    // ========================================
+    // CONFIGURACIÓN
+    // ========================================
+    const API_URL = 'https://localhost:7020/api/TipoUsuario';
+    let idEliminar = 0;
+
+    // ========================================
+    // FUNCIONES PARA OBTENER TOKEN
+    // ========================================
+
+    function getToken() {
+        return localStorage.getItem('accessToken');
+    }
+
+    function getHeaders() {
+        const token = getToken();
+        if (!token) {
+            mostrarAlerta('No hay sesión activa. Redirigiendo...', 'warning');
+            setTimeout(function() {
+                window.location.href = '/Login';
+            }, 1500);
+            return null;
+        }
+        return {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    // ========================================
+    // FUNCIÓN PARA VERIFICAR Y REDIRIGIR SI 401
+    // ========================================
+
+    function handleUnauthorized(response) {
+        if (response.status === 401) {
+            console.log('❌ Token inválido o expirado, redirigiendo a Login');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('nombreCompleto');
+            localStorage.removeItem('usuarioTipo');
+            localStorage.removeItem('usuarioId');
+            localStorage.setItem('redirectMessage', 'Su sesión ha expirado. Por favor inicie sesión nuevamente.');
+            window.location.href = '/Login';
+            return true;
+        }
+        return false;
+    }
+
+    // ========================================
+    // ALERTAS Y LOADING
+    // ========================================
+
+    function mostrarAlerta(mensaje, tipo) {
+        const div = document.getElementById('alertas');
+        div.innerHTML = `
+            <div class="alert alert-${tipo} alert-dismissible fade show">
+                ${mensaje}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            </div>
+        `;
+        setTimeout(() => { div.innerHTML = ''; }, 4000);
+    }
+
+    function mostrarLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    // ========================================
+    // FUNCIONES DE MODALES
+    // ========================================
+
+    function abrirModalCrear() {
+        document.getElementById('tituloModal').textContent = 'Nuevo Tipo de Usuario';
+        document.getElementById('idTipoUsuario').value = '0';
+        document.getElementById('nombre').value = '';
+        limpiarErrores();
+        document.getElementById('modalFormulario').style.display = 'block';
+    }
+
+    function cerrarModalFormulario() {
+        document.getElementById('modalFormulario').style.display = 'none';
+        limpiarErrores();
+    }
+
+    function abrirModalEliminar(id, nombre) {
+        idEliminar = id;
+        document.getElementById('nombreEliminar').textContent = nombre;
+        document.getElementById('modalEliminar').style.display = 'block';
+    }
+
+    function cerrarModalEliminar() {
+        document.getElementById('modalEliminar').style.display = 'none';
+    }
+
+    // ========================================
+    // VALIDACIONES
+    // ========================================
+
+    function limpiarErrores() {
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    }
+
+    function mostrarError(campo, mensaje) {
+        const el = document.getElementById(campo);
+        const err = document.getElementById('err' + campo.charAt(0).toUpperCase() + campo.slice(1));
+        el.classList.add('is-invalid');
+        err.textContent = mensaje;
+    }
+
+    function validarFormulario() {
+        let valido = true;
+        limpiarErrores();
+
+        const nombre = document.getElementById('nombre').value.trim();
+
+        if (!nombre) {
+            mostrarError('nombre', 'El nombre es requerido');
+            valido = false;
+        } else if (nombre.length < 3 || nombre.length > 50) {
+            mostrarError('nombre', 'El nombre debe tener entre 3 y 50 caracteres');
+            valido = false;
+        }
+
+        return valido;
+    }
+
+    function obtenerDatosFormulario() {
+        return {
+            nombre: document.getElementById('nombre').value.trim()
+        };
+    }
+
+    // ========================================
+    // CRUD - LISTAR TODOS
+    // ========================================
+
+    function renderizarTiposUsuario(tipos) {
+        const container = document.getElementById('listaTiposUsuario');
+
+        if (!tipos || tipos.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-info-circle"></i> No hay tipos de usuario registrados
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th style="width:120px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        tipos.forEach(function(t) {
+            html += `
+                <tr>
+                    <td>${t.id}</td>
+                    <td>${t.nombre}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editarTipoUsuario(${t.id})" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="abrirModalEliminar(${t.id}, '${t.nombre}')" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    // ========================================
+    // CRUD - CARGAR TODOS (SOLO UNA VEZ)
+    // ========================================
+
+    async function cargarTiposUsuario() {
+        const headers = getHeaders();
+        if (!headers) return;
+
+        try {
+            mostrarLoading(true);
+            const response = await fetch(API_URL, { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (!response.ok) throw new Error('Error al cargar');
+            const data = await response.json();
+            renderizarTiposUsuario(data);
+        } catch (error) {
+            document.getElementById('listaTiposUsuario').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error al cargar tipos de usuario: ${error.message}
+                </div>
+            `;
+        } finally {
+            mostrarLoading(false);
+        }
+    }
+
+    // ========================================
+    // CRUD - CREAR / EDITAR
+    // ========================================
+
+    async function guardarTipoUsuario() {
+        if (!validarFormulario()) return;
+
+        const headers = getHeaders();
+        if (!headers) return;
+
+        const id = document.getElementById('idTipoUsuario').value;
+        const data = obtenerDatosFormulario();
+        const isEdit = id !== '0';
+        const url = isEdit ? `${API_URL}/${id}` : API_URL;
+        const method = isEdit ? 'PUT' : 'POST';
+
+        if (isEdit) {
+            data.id = parseInt(id);
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: JSON.stringify(data)
+            });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                mostrarAlerta(isEdit ? 'Tipo de usuario actualizado' : 'Tipo de usuario creado', 'success');
+                cerrarModalFormulario();
+                await cargarTiposUsuario();  // ✅ Recargar lista después de guardar
+            } else {
+                const error = await response.json();
+                mostrarAlerta(error.error || 'Error al guardar', 'danger');
+            }
+        } catch (error) {
+            mostrarAlerta('Error de conexión: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // CRUD - EDITAR (OBTENER POR ID)
+    // ========================================
+
+    async function editarTipoUsuario(id) {
+        const headers = getHeaders();
+        if (!headers) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, { headers });
+
+            if (handleUnauthorized(response)) return;
+
+            if (!response.ok) throw new Error('Error al obtener datos');
+            const data = await response.json();
+
+            document.getElementById('tituloModal').textContent = 'Editar Tipo de Usuario';
+            document.getElementById('idTipoUsuario').value = data.id;
+            document.getElementById('nombre').value = data.nombre;
+            limpiarErrores();
+            document.getElementById('modalFormulario').style.display = 'block';
+        } catch (error) {
+            mostrarAlerta('Error al cargar datos: ' + error.message, 'danger');
+        }
+    }
+
+    // ========================================
+    // CRUD - ELIMINAR
+    // ========================================
+
+    async function eliminarTipoUsuario() {
+        const headers = getHeaders();
+        if (!headers) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${idEliminar}`, {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            if (handleUnauthorized(response)) return;
+
+            if (response.ok) {
+                cerrarModalEliminar();
+                mostrarAlerta('Tipo de usuario eliminado correctamente', 'success');
+                await cargarTiposUsuario();  // ✅ Recargar lista después de eliminar
+            } else {
+                const error = await response.json();
+                mostrarAlerta(error.error || 'Error al eliminar', 'danger');
+            }
+        } catch (error) {
+            mostrarAlerta('Error de conexión: ' + error.message, 'danger');
+        }
+    }
+</script>
+
+<style>
+    .card-panel {
+        background: #fff;
+        border: 1px solid #e3e6ec;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 0 auto;
+    }
+
+    .table th {
+        background: #f8f9fa;
+    }
+
+    .btn-sm {
+        margin-right: 4px;
+    }
+
+    .modal-header.bg-danger {
+        background: #dc3545 !important;
+    }
+</style>

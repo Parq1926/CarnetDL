@@ -10,8 +10,6 @@ namespace TiposUsuarioSRV5.Entities
         [Column("ID")]
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(50)]
         [Column("NOMBRE")]
         public string Nombre { get; set; } = string.Empty;
     }

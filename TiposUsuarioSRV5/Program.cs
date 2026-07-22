@@ -5,26 +5,23 @@ using TiposUsuarioSRV5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Agregar Razor Pages
-builder.Services.AddRazorPages();
-
-// Database
+//Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ✅ REGISTRAR HttpClient para TipoUsuarioApiClient
+//Registrar ApiClient
 builder.Services.AddHttpClient<ITipoUsuarioApiClient, TipoUsuarioApiClient>(client =>
 {
-    var url = builder.Configuration["Services:TipoUsuarioApi"] ?? "https://localhost:7020";
+    var url = builder.Configuration["Services:TiposUsuarioApi"] ?? "https://localhost:7020";
     client.BaseAddress = new Uri(url);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// ✅ Services
+// Servicios
 builder.Services.AddScoped<ITipoUsuarioService, TipoUsuarioService>();
 
-// CORS
+//CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -39,10 +36,8 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
 
-app.MapRazorPages();
+// MAPEAR ENDPOINTS
 app.MapTipoUsuarioEndpoints();
 
 app.Run();

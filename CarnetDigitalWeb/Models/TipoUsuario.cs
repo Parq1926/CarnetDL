@@ -1,6 +1,6 @@
-﻿namespace TiposUsuarioSRV5.DTOs
+﻿namespace CarnetDigitalWeb.Models
 {
-    public class TipoUsuarioDto
+    public class TipoUsuario
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;

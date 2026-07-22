@@ -20,14 +20,8 @@ namespace TiposUsuarioSRV5.Data
             {
                 entity.ToTable("TIPOUSUARIO", "PameRojas");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id)
-                    .HasColumnName("ID")
-                    .ValueGeneratedOnAdd();
-                entity.Property(e => e.Nombre)
-                    .HasColumnName("NOMBRE")
-                    .IsRequired()
-                    .HasMaxLength(50);
-                entity.HasIndex(e => e.Nombre).IsUnique();
+                entity.Property(e => e.Id).HasColumnName("ID");
+                entity.Property(e => e.Nombre).HasColumnName("NOMBRE").IsRequired().HasMaxLength(50);
             });
         }
     }

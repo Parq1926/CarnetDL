@@ -74,16 +74,16 @@ namespace TiposUsuarioSRV5.Services
 
         public async Task<bool> ExistsAsync(int id, CancellationToken ct = default)
         {
-            var response = await _http.GetAsync($"api/TipoUsuario/{id}", ct);
+            var response = await _http.GetAsync($"api/TipoUsuario/exists/{id}", ct);
             return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> ExistsByNameAsync(string nombre, int? excludeId = null, CancellationToken ct = default)
         {
-            var url = $"api/TipoUsuario/exists?nombre={Uri.EscapeDataString(nombre)}";
+            var url = $"api/TipoUsuario/exists/nombre/{Uri.EscapeDataString(nombre)}";
             if (excludeId.HasValue)
             {
-                url += $"&excludeId={excludeId.Value}";
+                url += $"?excludeId={excludeId.Value}";
             }
             var response = await _http.GetAsync(url, ct);
             if (response.IsSuccessStatusCode)

@@ -74,16 +74,16 @@ namespace TipoIdentificacionSRV6.Services
 
         public async Task<bool> ExistsAsync(int id, CancellationToken ct = default)
         {
-            var response = await _http.GetAsync($"api/TipoIdentificacion/{id}", ct);
+            var response = await _http.GetAsync($"api/TipoIdentificacion/exists/{id}", ct);
             return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> ExistsByNameAsync(string nombre, int? excludeId = null, CancellationToken ct = default)
         {
-            var url = $"api/TipoIdentificacion/exists?nombre={Uri.EscapeDataString(nombre)}";
+            var url = $"api/TipoIdentificacion/exists/nombre/{Uri.EscapeDataString(nombre)}";
             if (excludeId.HasValue)
             {
-                url += $"&excludeId={excludeId.Value}";
+                url += $"?excludeId={excludeId.Value}";
             }
             var response = await _http.GetAsync(url, ct);
             if (response.IsSuccessStatusCode)

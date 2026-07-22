@@ -112,13 +112,13 @@
         <form id="loginForm" onsubmit="return handleLogin(event)">
             <div class="mb-3">
                 <label class="form-label">Correo Electrónico</label>
-                <input type="email" id="email" class="form-control" placeholder="ejemplo@cuc.ac.cr" value="admin@cuc.ac.cr">
+                <input type="email" id="email" class="form-control" placeholder="ejemplo@cuc.ac.cr" value="prueba@cuc.ac.cr">
                 <div class="invalid-feedback" id="emailError"></div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Contraseña</label>
-                <input type="password" id="password" class="form-control" placeholder="Ingrese su contraseña" value="Admin123*">
+                <input type="password" id="password" class="form-control" placeholder="Ingrese su contraseña" value="Prueba1234">
                 <div class="invalid-feedback" id="passwordError"></div>
             </div>
 
@@ -148,12 +148,48 @@
     </div>
 
     <script>
+                        // ========================================
+            // 🔐 VERIFICAR TOKEN EN LOCALSTORAGE
+            // ========================================
             document.addEventListener('DOMContentLoaded', function() {
-                var token = localStorage.getItem('accessToken') || sessionStorage.getItem('Token');
-                if (token) {
-                    window.location.href = '/EstadoUsuario';
+                const storedToken = localStorage.getItem('accessToken');
+                console.log('=== MICROSERVICIO ===');
+                console.log('Token en localStorage:', storedToken ? 'SÍ existe' : 'NO existe');
+
+                // ✅ Si no hay token, redirigir a Login
+                if (!storedToken) {
+                    console.log('⚠️ No hay token, redirigiendo a Login');
+                    localStorage.setItem('redirectMessage', 'Por favor inicie sesión para utilizar el sistema');
+                    window.location.href = 'https://localhost:7019/Login';
+                    return;
                 }
+
+                console.log('✅ Token válido, cargando datos...');
+                cargarDatos();
             });
+
+            // ========================================
+            // 🔐 FUNCIONES PARA OBTENER TOKEN
+            // ========================================
+
+            function getToken() {
+                return localStorage.getItem('accessToken');
+            }
+
+            function getHeaders() {
+                const token = getToken();
+                if (!token) {
+                    mostrarAlerta('No hay sesión activa. Redirigiendo...', 'warning');
+                    setTimeout(function() {
+                        window.location.href = 'https://localhost:7019/Login';
+                    }, 1500);
+                    return null;
+                }
+                return {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                };
+            }
 
             function mostrarAlerta(mensaje, tipo) {
                 var alertDiv = document.getElementById('alertMessage');
@@ -256,7 +292,6 @@
                             localStorage.setItem('usuarioTipoId', data.user.tipoUsuarioId || '');
                         }
 
-                        sessionStorage.setItem('Token', data.accessToken);
                         mostrarAlerta('¡Login exitoso! Redirigiendo...', 'success');
 
                         setTimeout(function() {
